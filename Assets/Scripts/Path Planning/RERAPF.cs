@@ -10,21 +10,21 @@ namespace Assets.Scripts.Path_Planning
 {
     class RERAPF
     {
-        private const float ROBOT_REPULSION_FACTOR = 1f;
-        private const float OBSTACLE_REPULSION_FACTOR = 0.1f;
+        private const float ROBOT_REPULSION_FACTOR = 10f;
+        private const float OBSTACLE_REPULSION_FACTOR = 5f;
         private const float GOAL_ATTRACTION_FACTOR = 10f;
 
         private const float EXCITATION_FACTOR = 5f;
         private const float RELAXATION_FACTOR = 0.5f;
 
         private const float OBSTACLE_INFLUENCE_RADIUS = 5f;
-        private const float ROBOT_INFLUENCE_RADIUS = 5f;
+        private const float ROBOT_INFLUENCE_RADIUS = 15f;
 
         public TileMap map;
 
-        public RERAPF(Transform[] shelves, Transform[] walls, Transform floor, float tileSize, GameObject tilePrefab)
+        public RERAPF(Transform[] shelves, Transform[] walls, Transform floor, float tileSize, GameObject tilePrefab, GameObject tileGoalPrefab)
         {
-            map = new TileMap(floor, shelves, walls, tileSize, tilePrefab);
+            map = new TileMap(floor, shelves, walls, tileSize, tilePrefab, tileGoalPrefab);
         }
 
 
@@ -52,6 +52,7 @@ namespace Assets.Scripts.Path_Planning
             }
 
             public GameObject robotGameObject;
+            public GameObject goalTileGameObject;
             public List<Trip> trips;
             public PathRenderer pathRenderer;
             public List<ExploredTile> exploredTiles = new List<ExploredTile>();
@@ -116,11 +117,20 @@ namespace Assets.Scripts.Path_Planning
         public IEnumerator MoveRobot(Robot robot, float speed, List<Robot> robots)
         {
             // loop until robot has reached the goal
+            bool newGoal = true;
             while (robot.trips.Count() > 0)
             {
                 // if goal is not reached
                 int[] tripTiles = map.GetTripTiles(robot.trips.First());
-                map.DrawTile(tripTiles[2], tripTiles[3]);
+
+                if (newGoal)
+                {
+                    if (robot.goalTileGameObject)
+                        UnityEngine.Object.Destroy(robot.goalTileGameObject);
+                    robot.goalTileGameObject = map.DrawGoalTile(tripTiles[2], tripTiles[3]);
+                }
+                newGoal = false;
+                
                 if (robot.currentPosition[0] != tripTiles[2] || robot.currentPosition[1] != tripTiles[3])
                 {
                     // artificial potential field pathfinding
@@ -149,6 +159,7 @@ namespace Assets.Scripts.Path_Planning
                     {
                         robot.trips.RemoveAt(0);
                         robot.exploredTiles.Clear();
+                        newGoal = true;
                     }
                 }
                 yield return new WaitForSeconds(0.1f);
@@ -192,6 +203,11 @@ namespace Assets.Scripts.Path_Planning
                     if (exploredTileArr.Count > 0)
                         exploredTile = exploredTileArr[0];
 
+                    // THIS BASICALLY RECALCULATES PREVIOUS STATIC POTENTIAL FOR EVERY EXPLORED TILE
+                    // THIS MAY BE FAULTY AND FOR NOW DOES NOT SEEM TO BE INCLUDED IN THE PSEUDO-CODE
+                    foreach(Robot.ExploredTile et in robot.exploredTiles)
+                        et.UpdateStaticPotential(Relaxation(et));
+
                     float staticPotential = 0, dynamicPotential = 0;
                     // if tile has not been visited
                     if (exploredTile == null)
@@ -218,7 +234,7 @@ namespace Assets.Scripts.Path_Planning
                         staticPotential = Relaxation(exploredTile);
                         exploredTile.UpdateStaticPotential(staticPotential);
                     }
-                    dynamicPotential = CalculateRobotPotential(x, y, robots);
+                    dynamicPotential = CalculateRobotPotential(x, y, robots.Where(r => r != robot).ToList());
 
                     // add static & dynamic potentials together
                     apf[i + 1, j + 1] = staticPotential + dynamicPotential;

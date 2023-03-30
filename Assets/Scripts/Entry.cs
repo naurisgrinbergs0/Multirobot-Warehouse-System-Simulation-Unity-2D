@@ -9,15 +9,20 @@ public class Entry : MonoBehaviour
     public GameObject floorPrefab;
     public GameObject shelfFloorPrefab;
     public GameObject robotFloorPrefab;
+
     public GameObject loadZonePrefab;
     public GameObject unloadZonePrefab;
-    public GameObject tilePrefab;
+
     public GameObject pathPrefab;
+
+    public GameObject tilePrefab;
+    public GameObject goalTilePrefab;
 
     public enum PathFindingAlgorithm
     {
         AStar,
-        RERAPF
+        RERAPF,
+        ImprovedDQN
     };
     public PathFindingAlgorithm pathFindingAlgorithm = PathFindingAlgorithm.AStar;
 
@@ -38,7 +43,8 @@ public class Entry : MonoBehaviour
                 case PathFindingAlgorithm.AStar:
                 {
                     AStar astar = new AStar(shelfGameObjects.Select(sgo => sgo.transform).ToArray()
-                        , wallGameObjects.Select(wgo => wgo.transform).ToArray(), floorPrefab.transform, tileSize, tilePrefab);
+                        , wallGameObjects.Select(wgo => wgo.transform).ToArray(), floorPrefab.transform, tileSize, tilePrefab
+                        , goalTilePrefab);
 
                     astar.map.DrawObstructedTiles();
 
@@ -57,7 +63,8 @@ public class Entry : MonoBehaviour
                 case PathFindingAlgorithm.RERAPF:
                 {
                     RERAPF rerapf = new RERAPF(shelfGameObjects.Select(sgo => sgo.transform).ToArray()
-                        , wallGameObjects.Select(wgo => wgo.transform).ToArray(), floorPrefab.transform, tileSize, tilePrefab);
+                        , wallGameObjects.Select(wgo => wgo.transform).ToArray(), floorPrefab.transform, tileSize, tilePrefab
+                        , goalTilePrefab);
 
                     rerapf.map.DrawObstructedTiles();
 
@@ -73,6 +80,26 @@ public class Entry : MonoBehaviour
                     rerapf.StartTravelling(robots, this);
                     break;
                 }
+            //case PathFindingAlgorithm.ImprovedDQN:
+            //    {
+            //        ImprovedDQN improvedDQN = new ImprovedDQN(shelfGameObjects.Select(sgo => sgo.transform).ToArray()
+            //            , wallGameObjects.Select(wgo => wgo.transform).ToArray(), floorPrefab.transform, tileSize, tilePrefab
+            //            , goalTilePrefab);
+
+            //        improvedDQN.map.DrawObstructedTiles();
+
+            //        // make trips for robots
+            //        List<RERAPF.Robot> robots = new List<RERAPF.Robot>();
+            //        foreach (GameObject rgo in robotGameObjects)
+            //        {
+            //            List<Trip> trips = Trip.GenerateTripList(rgo, shelfGameObjects, loadZonePrefab, unloadZonePrefab, 5);
+            //            RERAPF.Robot robot = new RERAPF.Robot(rgo, trips);
+
+            //            robots.Add(robot);
+            //        }
+            //        improvedDQN.StartTravelling(robots, this);
+            //        break;
+            //    }
         }
     }
 

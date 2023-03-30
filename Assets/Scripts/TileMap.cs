@@ -15,23 +15,23 @@ namespace Assets.Scripts
         Transform[] walls;
         public float tileSize;
         public GameObject tilePrefab;
+        public GameObject tileGoalPrefab;
 
-        private const float marginAroundObstacles = 1.5f;
+        private const float marginAroundObstacles = 1f;
 
-        public TileMap(Transform floor, Transform[] shelves, Transform[] walls, float tileSize, GameObject tilePrefab)
+        public TileMap(Transform floor, Transform[] shelves, Transform[] walls, float tileSize, GameObject tilePrefab, GameObject tileGoalPrefab)
         {
             this.floor = floor;
             this.shelves = shelves;
             this.walls = walls;
             this.tileSize = tileSize;
             this.tilePrefab = tilePrefab;
+            this.tileGoalPrefab = tileGoalPrefab;
             tiles = GenerateMap();
         }
 
         private int[,] GenerateMap()
         {
-            Vector3 floorLowerLeftCorner = floor.position - floor.GetComponent<SpriteRenderer>().bounds.extents;
-
             // Get the number of tiles in each direction for both floors
             int widthTiles = Mathf.RoundToInt(floor.GetComponent<SpriteRenderer>().bounds.size.x / tileSize);
             int heightTiles = Mathf.RoundToInt(floor.GetComponent<SpriteRenderer>().bounds.size.y / tileSize);
@@ -54,8 +54,7 @@ namespace Assets.Scripts
             {
                 for (int y = 0; y < map.GetLength(1); y++)
                 {
-                    Vector3 tileLowerLeftCorner = new Vector3(floorLowerLeftCorner.x, floorLowerLeftCorner.y)
-                        + new Vector3(x * tileSize, y * tileSize);
+                    float[] tileCenter = TileToXY(x, y);
 
                     // Check if the tile intersects with any shelf with a margin around it
                     bool intersectsObstacle = false;
@@ -63,7 +62,7 @@ namespace Assets.Scripts
                     {
                         Bounds shelfBounds = shelf.GetComponent<SpriteRenderer>().bounds;
                         shelfBounds.Expand(margin); // Expand the bounds by the margin width
-                        if (shelfBounds.Intersects(new Bounds(tileLowerLeftCorner, new Vector3(tileSize, tileSize))))
+                        if (shelfBounds.Intersects(new Bounds(new Vector3(tileCenter[0], tileCenter[1]), new Vector3(tileSize, tileSize))))
                         {
                             intersectsObstacle = true;
                             break;
@@ -75,7 +74,7 @@ namespace Assets.Scripts
                     {
                         Bounds wallBounds = wall.GetComponent<SpriteRenderer>().bounds;
                         wallBounds.Expand(margin); // Expand the bounds by the margin width
-                        if (wallBounds.Intersects(new Bounds(tileLowerLeftCorner, new Vector3(tileSize, tileSize))))
+                        if (wallBounds.Intersects(new Bounds(new Vector3(tileCenter[0], tileCenter[1]), new Vector3(tileSize, tileSize))))
                         {
                             intersectsObstacle = true;
                             break;
@@ -154,10 +153,15 @@ namespace Assets.Scripts
             for (int x = 0; x < tiles.GetLength(0); x++)
                 for (int y = 0; y < tiles.GetLength(1); y++)
                     if (tiles[x, y] == 1) // check if the tile is obstructed
-                        DrawTile(x, y, tilePrefab == null ? this.tilePrefab : tilePrefab);
+                        DrawTile(x, y, tilePrefab: tilePrefab == null ? this.tilePrefab : tilePrefab);
         }
 
-        public void DrawTile(int tileX, int tileY, GameObject tilePrefab = null)
+        public GameObject DrawGoalTile(int tileX, int tileY, GameObject tilePrefab = null)
+        {
+            return DrawTile(tileX, tileY, tileSize * 1.5f, tileSize * 1.5f, tilePrefab == null ? this.tileGoalPrefab : tilePrefab);
+        }
+
+        public GameObject DrawTile(int tileX, int tileY, float sizeX = 0, float sizeY = 0, GameObject tilePrefab = null)
         {
             // Calculate the position of the tile
             float[] pos = TileToXY(tileX, tileY);
@@ -165,7 +169,9 @@ namespace Assets.Scripts
             // Create the tile game object
             GameObject tileObj = GameObject.Instantiate(tilePrefab == null ? this.tilePrefab : tilePrefab
                 , new Vector3(pos[0], pos[1], 0f), Quaternion.identity);
-            tileObj.transform.localScale = new Vector3(tileSize, tileSize, 1f);
+            //tileObj.transform.localScale = new Vector3(tileSize, tileSize, 1f);
+            tileObj.GetComponent<SpriteRenderer>().size = new Vector2(sizeX == 0 ? tileSize : sizeX, sizeY == 0 ? tileSize : sizeY);
+            return tileObj;
         }
 
         #endregion Drawing

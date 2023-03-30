@@ -66,3 +66,6 @@ TagManager:
   - name: Paths
     uniqueID: 2179555193
     locked: 0
+  - name: Goals
+    uniqueID: 3276784509
+    locked: 0

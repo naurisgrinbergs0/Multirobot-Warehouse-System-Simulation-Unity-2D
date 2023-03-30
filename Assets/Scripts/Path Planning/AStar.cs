@@ -7,9 +7,9 @@ public class AStar
 {
     public TileMap map;
 
-    public AStar(Transform[] shelves, Transform[] walls, Transform floor, float tileSize, GameObject tilePrefab)
+    public AStar(Transform[] shelves, Transform[] walls, Transform floor, float tileSize, GameObject tilePrefab, GameObject tileGoalPrefab)
     {
-        map = new TileMap(floor, shelves, walls, tileSize, tilePrefab);
+        map = new TileMap(floor, shelves, walls, tileSize, tilePrefab, tileGoalPrefab);
     }
 
 
