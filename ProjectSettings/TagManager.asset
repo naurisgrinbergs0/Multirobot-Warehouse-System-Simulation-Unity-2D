@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - Shelf
+  - ZoneLoad
+  - ZoneUnload
+  - Robot
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - Floors
+  - Shelves
+  - Robots
+  - Zones
+  - Tiles
+  - Walls
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: Floors
+    uniqueID: 1128009091
+    locked: 0
+  - name: Zones
+    uniqueID: 3579493779
+    locked: 0
+  - name: Shelves
+    uniqueID: 3070068453
+    locked: 0
+  - name: Walls
+    uniqueID: 3071913197
+    locked: 0
+  - name: Robots
+    uniqueID: 3433173963
+    locked: 0
+  - name: Tiles
+    uniqueID: 2690423549
+    locked: 0
+  - name: Paths
+    uniqueID: 2179555193
+    locked: 0
