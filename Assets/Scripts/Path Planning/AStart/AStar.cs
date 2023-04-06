@@ -1,6 +1,7 @@
 using Assets.Scripts;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class AStar
@@ -34,7 +35,6 @@ public class AStar
     {
         public GameObject robotGameObject;
         public List<Trip> trips;
-        public int tripNum;
         public PathRenderer pathRenderer;
 
         public Robot(GameObject robot, List<Trip> trips)
@@ -193,7 +193,7 @@ public class AStar
             // Check if any robot still has an unfinished path
             foreach (Robot robot in robots)
             {
-                if (robot.tripNum < robot.trips.Count)
+                if (robot.trips.Count > 0)
                 {
                     finished = false;
                     break;
@@ -207,9 +207,9 @@ public class AStar
     private IEnumerator MoveRobot(Robot robot, float moveSpeed, GameObject pathPrefab)
     {
         // Loop through each trip in the list
-        while (robot.tripNum < robot.trips.Count)
+        while (robot.trips.Count > 0)
         {
-            Trip trip = robot.trips[robot.tripNum];
+            Trip trip = robot.trips.First();
 
             int[] tileStart = null; int[] tileEnd = null;
             // from
@@ -254,7 +254,7 @@ public class AStar
                 // Pause for a short time at each node in the path
                 yield return new WaitForSeconds(0.1f);
             }
-            robot.tripNum++;
+            robot.trips.RemoveAt(0);
             GameObject.DestroyImmediate(pathInstance);
         }
     }

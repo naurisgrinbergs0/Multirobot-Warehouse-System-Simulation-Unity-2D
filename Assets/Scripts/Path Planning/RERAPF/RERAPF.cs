@@ -10,15 +10,15 @@ namespace Assets.Scripts.Path_Planning
 {
     class RERAPF
     {
-        private const float ROBOT_REPULSION_FACTOR = 10f;
+        private const float ROBOT_REPULSION_FACTOR = 120f;
         private const float OBSTACLE_REPULSION_FACTOR = 5f;
         private const float GOAL_ATTRACTION_FACTOR = 10f;
 
         private const float EXCITATION_FACTOR = 5f;
         private const float RELAXATION_FACTOR = 0.5f;
 
-        private const float OBSTACLE_INFLUENCE_RADIUS = 5f;
-        private const float ROBOT_INFLUENCE_RADIUS = 15f;
+        private const float OBSTACLE_INFLUENCE_RADIUS = 2f;
+        private const float ROBOT_INFLUENCE_RADIUS = 3f;
 
         public TileMap map;
 

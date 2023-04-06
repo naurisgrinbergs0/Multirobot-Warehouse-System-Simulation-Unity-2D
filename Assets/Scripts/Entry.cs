@@ -21,8 +21,9 @@ public class Entry : MonoBehaviour
     public enum PathFindingAlgorithm
     {
         AStar,
+        ImporvedAStar,
         RERAPF,
-        ImprovedDQN
+        abc
     };
     public PathFindingAlgorithm pathFindingAlgorithm = PathFindingAlgorithm.AStar;
 
@@ -39,8 +40,8 @@ public class Entry : MonoBehaviour
 
         switch (pathFindingAlgorithm)
         {
-                default:
-                case PathFindingAlgorithm.AStar:
+            default:
+            case PathFindingAlgorithm.AStar:
                 {
                     AStar astar = new AStar(shelfGameObjects.Select(sgo => sgo.transform).ToArray()
                         , wallGameObjects.Select(wgo => wgo.transform).ToArray(), floorPrefab.transform, tileSize, tilePrefab
@@ -60,7 +61,27 @@ public class Entry : MonoBehaviour
                     astar.StartTravelling(robots, this);
                     break;
                 }
-                case PathFindingAlgorithm.RERAPF:
+            case PathFindingAlgorithm.ImporvedAStar:
+                {
+                    ImprovedAStar improvedAStar = new ImprovedAStar(shelfGameObjects.Select(sgo => sgo.transform).ToArray()
+                        , wallGameObjects.Select(wgo => wgo.transform).ToArray(), floorPrefab.transform, tileSize, tilePrefab
+                        , goalTilePrefab);
+
+                    improvedAStar.map.DrawObstructedTiles();
+
+                    // make trips for robots
+                    List<ImprovedAStar.Robot> robots = new List<ImprovedAStar.Robot>();
+                    foreach (GameObject rgo in robotGameObjects)
+                    {
+                        List<Trip> trips = Trip.GenerateTripList(rgo, shelfGameObjects, loadZonePrefab, unloadZonePrefab, 5);
+                        ImprovedAStar.Robot robot = new ImprovedAStar.Robot(rgo, trips);
+
+                        robots.Add(robot);
+                    }
+                    improvedAStar.StartTravelling(robots, this);
+                    break;
+                }
+            case PathFindingAlgorithm.RERAPF:
                 {
                     RERAPF rerapf = new RERAPF(shelfGameObjects.Select(sgo => sgo.transform).ToArray()
                         , wallGameObjects.Select(wgo => wgo.transform).ToArray(), floorPrefab.transform, tileSize, tilePrefab
@@ -80,26 +101,26 @@ public class Entry : MonoBehaviour
                     rerapf.StartTravelling(robots, this);
                     break;
                 }
-            //case PathFindingAlgorithm.ImprovedDQN:
-            //    {
-            //        ImprovedDQN improvedDQN = new ImprovedDQN(shelfGameObjects.Select(sgo => sgo.transform).ToArray()
-            //            , wallGameObjects.Select(wgo => wgo.transform).ToArray(), floorPrefab.transform, tileSize, tilePrefab
-            //            , goalTilePrefab);
+            case PathFindingAlgorithm.abc:
+                {
+                    ImprovedACO improvedACO = new ImprovedACO(shelfGameObjects.Select(sgo => sgo.transform).ToArray()
+                        , wallGameObjects.Select(wgo => wgo.transform).ToArray(), floorPrefab.transform, tileSize, tilePrefab
+                        , goalTilePrefab);
 
-            //        improvedDQN.map.DrawObstructedTiles();
+                    improvedACO.map.DrawObstructedTiles();
 
-            //        // make trips for robots
-            //        List<RERAPF.Robot> robots = new List<RERAPF.Robot>();
-            //        foreach (GameObject rgo in robotGameObjects)
-            //        {
-            //            List<Trip> trips = Trip.GenerateTripList(rgo, shelfGameObjects, loadZonePrefab, unloadZonePrefab, 5);
-            //            RERAPF.Robot robot = new RERAPF.Robot(rgo, trips);
+                    // make trips for robots
+                    List<ImprovedACO.Robot> robots = new List<ImprovedACO.Robot>();
+                    foreach (GameObject rgo in robotGameObjects)
+                    {
+                        List<Trip> trips = Trip.GenerateTripList(rgo, shelfGameObjects, loadZonePrefab, unloadZonePrefab, 5);
+                        ImprovedACO.Robot robot = new ImprovedACO.Robot(rgo, trips);
 
-            //            robots.Add(robot);
-            //        }
-            //        improvedDQN.StartTravelling(robots, this);
-            //        break;
-            //    }
+                        robots.Add(robot);
+                    }
+                    improvedACO.StartTravelling(robots, this);
+                    break;
+                }
         }
     }
 
