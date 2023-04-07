@@ -10,11 +10,11 @@ namespace Assets.Scripts
 {
     public class Trip
     {
-        public GameObject from;
-        public GameObject to;
+        public Transform from;
+        public Transform to;
         public bool isCargoTrip;
 
-        public Trip(GameObject from, GameObject to, bool isCargoTrip)
+        public Trip(Transform from, Transform to, bool isCargoTrip)
         {
             this.from = from;
             this.to = to;
@@ -22,16 +22,16 @@ namespace Assets.Scripts
         }
 
 
-        public static List<Trip> GenerateTripList(GameObject robot, GameObject[] shelfTransforms, GameObject zoneLoadTransform,
-            GameObject zoneUnloadTransform, int numberOfTrips)
+        public static List<Trip> GenerateTripList(Transform robot, Transform[] shelfTransforms, Transform zoneLoadTransform,
+            Transform zoneUnloadTransform, int numberOfTrips)
         {
             List<Trip> tripList = new List<Trip>();
-            GameObject lastShelf = null;
-            GameObject lastUnloadZone = null;
+            Transform lastShelf = null;
+            Transform lastUnloadZone = null;
 
             // Add first trip from robot to a shelf
-            GameObject from = robot;
-            GameObject to = shelfTransforms[Random.Range(0, shelfTransforms.Length)];
+            Transform from = robot;
+            Transform to = shelfTransforms[Random.Range(0, shelfTransforms.Length)];
             Trip firstTrip = new Trip(from, to, false);
             tripList.Add(firstTrip);
             lastShelf = to;
@@ -41,8 +41,8 @@ namespace Assets.Scripts
             {
                 // Determine the trip type
                 bool isCargoTrip = (i + 1) % 2 == 0;
-                GameObject nextFrom = null;
-                GameObject nextTo = null;
+                Transform nextFrom = null;
+                Transform nextTo = null;
 
                 if (lastShelf == null || Random.Range(0, 2) == 0)
                 {

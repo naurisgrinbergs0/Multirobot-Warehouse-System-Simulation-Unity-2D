@@ -94,7 +94,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2321478987505452591}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 36c6afdd98887e24eacedf8bc90d2498, type: 3}
+  m_Script: {fileID: 11500000, guid: 3e0a9a38d1e2701499b68f2d9ba054dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   ShelfPrefab: {fileID: 0}

@@ -1,32 +1,31 @@
-﻿using System;
+﻿using Assets.Scripts.Path_Planning;
+using Assets.Scripts.Robot;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace Assets.Scripts
+namespace Assets.Scripts.Map
 {
-    public class TileMap
+    public class TileMap : MapBase
     {
         public int[,] tiles;
-        Transform floor;
-        Transform[] shelves;
-        Transform[] walls;
         public float tileSize;
-        public GameObject tilePrefab;
-        public GameObject tileGoalPrefab;
+        //public GameObject tilePrefab;
+        //public GameObject tileGoalPrefab;
 
         private const float marginAroundObstacles = 1f;
 
-        public TileMap(Transform floor, Transform[] shelves, Transform[] walls, float tileSize, GameObject tilePrefab, GameObject tileGoalPrefab)
+        public TileMap(Transform floor, Transform[] shelves, Transform[] walls, float tileSize/*, GameObject tilePrefab, GameObject tileGoalPrefab*/)
         {
             this.floor = floor;
             this.shelves = shelves;
             this.walls = walls;
             this.tileSize = tileSize;
-            this.tilePrefab = tilePrefab;
-            this.tileGoalPrefab = tileGoalPrefab;
+            //this.tilePrefab = tilePrefab;
+            //this.tileGoalPrefab = tileGoalPrefab;
             tiles = GenerateMap();
         }
 
@@ -105,7 +104,7 @@ namespace Assets.Scripts
                 , floorLowerLeftCorner.y + tileY * tileSize + tileSize / 2};
         }
 
-        public int[] GetShelfTile(GameObject shelf)
+        public int[] GetShelfTile(Transform shelf)
         {
             // take center tile within the shelf
             float x = shelf.GetComponent<Renderer>().bounds.center.x;
@@ -148,30 +147,50 @@ namespace Assets.Scripts
 
         #region Drawing
 
-        public void DrawObstructedTiles(GameObject tilePrefab = null)
+        public void DrawObstructedTiles(GameObject tilePrefab/* = null*/)
         {
             for (int x = 0; x < tiles.GetLength(0); x++)
                 for (int y = 0; y < tiles.GetLength(1); y++)
                     if (tiles[x, y] == 1) // check if the tile is obstructed
-                        DrawTile(x, y, tilePrefab: tilePrefab == null ? this.tilePrefab : tilePrefab);
+                        DrawTile(x, y, tilePrefab: /*tilePrefab == null ? this.tilePrefab :*/ tilePrefab);
         }
 
-        public GameObject DrawGoalTile(int tileX, int tileY, GameObject tilePrefab = null)
+        public GameObject DrawGoalTile(int tileX, int tileY, GameObject tilePrefab/* = null*/)
         {
-            return DrawTile(tileX, tileY, tileSize * 1.5f, tileSize * 1.5f, tilePrefab == null ? this.tileGoalPrefab : tilePrefab);
+            return DrawTile(tileX, tileY, /*tilePrefab == null ? this.tileGoalPrefab :*/ tilePrefab, tileSize * 1.5f, tileSize * 1.5f);
         }
 
-        public GameObject DrawTile(int tileX, int tileY, float sizeX = 0, float sizeY = 0, GameObject tilePrefab = null)
+        public GameObject DrawTile(int tileX, int tileY, GameObject tilePrefab/* = null*/, float sizeX = 0, float sizeY = 0)
         {
             // Calculate the position of the tile
             float[] pos = TileToXY(tileX, tileY);
 
             // Create the tile game object
-            GameObject tileObj = GameObject.Instantiate(tilePrefab == null ? this.tilePrefab : tilePrefab
+            GameObject tileObj = GameObject.Instantiate(/*tilePrefab == null ? this.tilePrefab :*/ tilePrefab
                 , new Vector3(pos[0], pos[1], 0f), Quaternion.identity);
             //tileObj.transform.localScale = new Vector3(tileSize, tileSize, 1f);
             tileObj.GetComponent<SpriteRenderer>().size = new Vector2(sizeX == 0 ? tileSize : sizeX, sizeY == 0 ? tileSize : sizeY);
             return tileObj;
+        }
+
+        public override void DrawPath(List<Vector2> path, Color color)
+        {
+            LineRenderer lineRenderer = GameObject.Instantiate(pathPrefab).GetComponent<LineRenderer>();
+
+            // Set the position count of the LineRenderer to the number of points in the path
+            lineRenderer.positionCount = path.Count;
+
+            // Set the positions of the LineRenderer to the points in the path
+            for (int i = 0; i < path.Count; i++)
+            {
+                Vector2 point = new Vector2(path[i].x, path[i].y);
+                lineRenderer.SetPosition(i, point);
+            }
+
+            // Customize the look of the LineRenderer
+            lineRenderer.startWidth = 0.1f;
+            lineRenderer.endWidth = 0.1f;
+            lineRenderer.material.color = color;
         }
 
         #endregion Drawing

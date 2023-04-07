@@ -132,7 +132,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 848837449624384425, guid: 24fc092d6793e904dadcb454a5c1ed4b, type: 3}
       propertyPath: m_Name
-      value: FloorInputOutput
+      value: FloorLoadUnload
       objectReference: {fileID: 0}
     - target: {fileID: 848837449624384427, guid: 24fc092d6793e904dadcb454a5c1ed4b, type: 3}
       propertyPath: m_RootOrder
@@ -258,6 +258,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 2321478987505452591, guid: d3038552384618a4ab7ce5815c96b5de, type: 3}
   m_PrefabInstance: {fileID: 534114760}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &534114764 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7946733424340903479, guid: d3038552384618a4ab7ce5815c96b5de, type: 3}
+  m_PrefabInstance: {fileID: 534114760}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &711411416
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -267,7 +272,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1287856493256357169, guid: 691d2754e5f61484ebc1dc6710b1bc99, type: 3}
       propertyPath: NumRobots
-      value: 3
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1287856493256357169, guid: 691d2754e5f61484ebc1dc6710b1bc99, type: 3}
       propertyPath: FloorPrefab
@@ -330,6 +335,11 @@ PrefabInstance:
 --- !u!1 &711411417 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8846013756416444051, guid: 691d2754e5f61484ebc1dc6710b1bc99, type: 3}
+  m_PrefabInstance: {fileID: 711411416}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &711411420 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8846013756416444141, guid: 691d2754e5f61484ebc1dc6710b1bc99, type: 3}
   m_PrefabInstance: {fileID: 711411416}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1132270257
@@ -487,12 +497,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 1314896077}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6795ed737efd8bf4381f04768ceef557, type: 3}
+  m_Script: {fileID: 11500000, guid: ffe09610dd65e894dbcbb98add66581e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   WallPrefab: {fileID: 2651503791400766873, guid: 8dd797c4a02316b4a955c99beaf1036f, type: 3}
   FloorPrefab: {fileID: 1314896077}
   wallThickness: 0.5
+--- !u!4 &1314896082 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2778642380648834442, guid: 08d6ef05583139d4795ad92b4f5a5b50, type: 3}
+  m_PrefabInstance: {fileID: 1314896076}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1376811391
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -557,6 +572,11 @@ PrefabInstance:
 --- !u!1 &1376811392 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2800245963145514765, guid: 0ae7b1856e7b42a44a7ff61809a86bd1, type: 3}
+  m_PrefabInstance: {fileID: 1376811391}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1376811394 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2800245963145514767, guid: 0ae7b1856e7b42a44a7ff61809a86bd1, type: 3}
   m_PrefabInstance: {fileID: 1376811391}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1391259001
@@ -625,6 +645,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 2800245963145514765, guid: 0ae7b1856e7b42a44a7ff61809a86bd1, type: 3}
   m_PrefabInstance: {fileID: 1391259001}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &1391259004 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2800245963145514767, guid: 0ae7b1856e7b42a44a7ff61809a86bd1, type: 3}
+  m_PrefabInstance: {fileID: 1391259001}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &7757618890114571799
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -636,6 +661,10 @@ PrefabInstance:
       propertyPath: floorPrefab
       value: 
       objectReference: {fileID: 1314896077}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: robotPrefab
+      value: 
+      objectReference: {fileID: 3228722513869701253, guid: 4daba47b84c1c45408bbb32f36fbe648, type: 3}
     - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: goalTilePrefab
       value: 
@@ -656,6 +685,26 @@ PrefabInstance:
       propertyPath: unloadZonePrefab
       value: 
       objectReference: {fileID: 1391259002}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: loadZoneTransform
+      value: 
+      objectReference: {fileID: 1376811394}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: floorGameTransform
+      value: 
+      objectReference: {fileID: 1314896082}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: robotFloorTransform
+      value: 
+      objectReference: {fileID: 711411420}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: shelfFloorTransform
+      value: 
+      objectReference: {fileID: 534114764}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: unloadZoneTransform
+      value: 
+      objectReference: {fileID: 1391259004}
     - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: pathFindingAlgorithm
       value: 2

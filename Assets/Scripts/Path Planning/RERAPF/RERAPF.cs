@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Assets.Scripts.Map;
+using Assets.Scripts.Robot;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +10,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Path_Planning
 {
-    class RERAPF
+    class RERAPF : PathfindingAlgorithm
     {
         private const float ROBOT_REPULSION_FACTOR = 120f;
         private const float OBSTACLE_REPULSION_FACTOR = 5f;
@@ -20,79 +22,30 @@ namespace Assets.Scripts.Path_Planning
         private const float OBSTACLE_INFLUENCE_RADIUS = 2f;
         private const float ROBOT_INFLUENCE_RADIUS = 3f;
 
-        public TileMap map;
-
-        public RERAPF(Transform[] shelves, Transform[] walls, Transform floor, float tileSize, GameObject tilePrefab, GameObject tileGoalPrefab)
+        public RERAPF(TileMap map)
         {
-            map = new TileMap(floor, shelves, walls, tileSize, tilePrefab, tileGoalPrefab);
+            this.map = map;
         }
 
 
-        public class Robot
+        public override void FindPaths(List<RobotBase> robots, MonoBehaviour coroutineProvider)
         {
-            public class ExploredTile
-            {
-                public int[] tile;
-                float? startStaticPotential = null;
-                float prevStaticPotential;
-                
-                public float? GetStartStaticPotential() { return startStaticPotential; }
-                public float GetPrevStaticPotential() { return prevStaticPotential; }
-                public void UpdateStaticPotential(float pot) { if (startStaticPotential == null) startStaticPotential = pot; prevStaticPotential = pot; }
-                public ExploredTile(int x, int y, float staticPotential)
-                {
-                    tile = new int[]{ x, y };
-                    UpdateStaticPotential(staticPotential);
-                }
-            }
+            paths.AddRange(robots.Select(r => new Tuple<RobotBase, List<Vector2>>(r, new List<Vector2>())));
 
-            public void AddExploredTile(int x, int y, float staticPotential)
-            {
-                exploredTiles.Add(new ExploredTile(x, y, staticPotential));
-            }
-
-            public GameObject robotGameObject;
-            public GameObject goalTileGameObject;
-            public List<Trip> trips;
-            public PathRenderer pathRenderer;
-            public List<ExploredTile> exploredTiles = new List<ExploredTile>();
-            public int[] currentPosition;
-
-            public Robot(GameObject robot, List<Trip> trips)
-            {
-                this.robotGameObject = robot;
-                this.trips = trips;
-            }
+            coroutineProvider.StartCoroutine(MoveRobots(robots.Select(r => (RobotRERAPF)r).ToList(), coroutineProvider));
         }
 
 
-
-        public void StartTravelling(List<Robot> robots, Entry coroutineProvider)
-        {
-            // set current position of each robot
-            foreach (Robot r in robots)
-            {
-                r.currentPosition = map.XYToTile(r.robotGameObject.GetComponent<Renderer>().bounds.center.x
-                    , r.robotGameObject.GetComponent<Renderer>().bounds.center.y);
-            }
-
-            coroutineProvider.StartCoroutine(MoveRobots(robots, 2f, coroutineProvider));
-        }
-
-
-        private IEnumerator MoveRobots(List<Robot> robots, float moveSpeed, Entry coroutineProvider)
+        private IEnumerator MoveRobots(List<RobotRERAPF> robots, MonoBehaviour coroutineProvider)
         {
             // Create a coroutine for each robot
             List<IEnumerator> coroutines = new List<IEnumerator>();
-            foreach (Robot robot in robots)
+            foreach (RobotRERAPF robot in robots)
             {
-                IEnumerator coroutine = MoveRobot(robot, moveSpeed, robots);
+                IEnumerator coroutine = MoveRobot(robot, robots);
                 coroutines.Add(coroutine);
                 coroutineProvider.StartCoroutine(coroutine);
             }
-
-            // Wait for all coroutines to finish
-            yield return new WaitForSeconds(0.1f);
 
             bool finished = false;
             while (!finished)
@@ -100,7 +53,7 @@ namespace Assets.Scripts.Path_Planning
                 finished = true;
 
                 // Check if any robot still has an unfinished path
-                foreach (Robot robot in robots)
+                foreach (RobotRERAPF robot in robots)
                 {
                     if (robot.trips.Count > 0)
                     {
@@ -111,18 +64,19 @@ namespace Assets.Scripts.Path_Planning
 
                 yield return null;
             }
+            isFinished = true;
         }
 
 
-        public IEnumerator MoveRobot(Robot robot, float speed, List<Robot> robots)
+        public IEnumerator MoveRobot(RobotRERAPF robot, List<RobotRERAPF> robots)
         {
             // loop until robot has reached the goal
-            bool newGoal = true;
+            //bool newGoal = true;
             while (robot.trips.Count() > 0)
             {
                 // if goal is not reached
-                int[] tripTiles = map.GetTripTiles(robot.trips.First());
-
+                int[] tripTiles = ((TileMap)map).GetTripTiles(robot.trips.First());
+                /*
                 if (newGoal)
                 {
                     if (robot.goalTileGameObject)
@@ -130,8 +84,8 @@ namespace Assets.Scripts.Path_Planning
                     robot.goalTileGameObject = map.DrawGoalTile(tripTiles[2], tripTiles[3]);
                 }
                 newGoal = false;
-                
-                if (robot.currentPosition[0] != tripTiles[2] || robot.currentPosition[1] != tripTiles[3])
+                */
+                if (robot.currentTile[0] != tripTiles[2] || robot.currentTile[1] != tripTiles[3])
                 {
                     // artificial potential field pathfinding
                     int[] nextTile = FindNextTile(robot, tripTiles, robots);
@@ -139,30 +93,25 @@ namespace Assets.Scripts.Path_Planning
                     if (nextTile == null)
                         break;
 
-                    robot.currentPosition = nextTile;
+                    robot.currentTile = nextTile;
 
-                    float[] pos = map.TileToXY(nextTile[0], nextTile[1]);
+                    float[] pos = ((TileMap)map).TileToXY(nextTile[0], nextTile[1]);
 
-                    // Get the position of the current node
-                    Vector3 targetPosition = new Vector3(pos[0], pos[1], robot.robotGameObject.transform.position.z);
-
-                    // Move the robot towards the target position
-                    while (Vector3.Distance(robot.robotGameObject.transform.position, targetPosition) > 0.01f)
-                    {
-                        robot.robotGameObject.transform.position = Vector3.MoveTowards(robot.robotGameObject.transform.position
-                            , targetPosition, speed * Time.deltaTime);
-                        yield return null;
-                    }
+                    // Move the robot to the target position
+                    robot.position = new Vector2(pos[0], pos[1]);
 
                     // if goal reached - remove trip & delete visited tiles
-                    if(nextTile[0] == tripTiles[2] && nextTile[1] == tripTiles[3])
+                    if (nextTile[0] == tripTiles[2] && nextTile[1] == tripTiles[3])
                     {
                         robot.trips.RemoveAt(0);
                         robot.exploredTiles.Clear();
-                        newGoal = true;
+                        //newGoal = true;
                     }
+                    map.DrawRobot(robot);
+                    paths.Where(p => p.Item1 == robot).First().Item2.Add(robot.position);
+                    map.DrawPath(paths.Where(p => p.Item1 == robot).First().Item2, robot.color);
                 }
-                yield return new WaitForSeconds(0.1f);
+                yield return null;
             }
             yield return null;
         }
@@ -170,7 +119,7 @@ namespace Assets.Scripts.Path_Planning
 
 
 
-        private int[] FindNextTile(Robot robot, int[] tripTiles, List<Robot> robots)
+        private int[] FindNextTile(RobotRERAPF robot, int[] tripTiles, List<RobotRERAPF> robots)
         {
             // if no trips planned - exit
             if (robot.trips.Count == 0)
@@ -182,30 +131,30 @@ namespace Assets.Scripts.Path_Planning
             {
                 for (int j = -1; j <= 1; j++)
                 {
-                    int x = robot.currentPosition[0] + i;
-                    int y = robot.currentPosition[1] + j;
+                    int x = robot.currentTile[0] + i;
+                    int y = robot.currentTile[1] + j;
 
                     // skip the tiles outside of the map
-                    if (x < 0 || x >= map.tiles.GetLength(0) || y < 0 || y >= map.tiles.GetLength(1))
+                    if (x < 0 || x >= ((TileMap)map).tiles.GetLength(0) || y < 0 || y >= ((TileMap)map).tiles.GetLength(1))
                     {
                         apf[i + 1, j + 1] = float.PositiveInfinity;
                         continue;
                     }
                     // skip obstacle tiles
-                    if (map.tiles[x, y] == 1)
+                    if (((TileMap)map).tiles[x, y] == 1)
                     {
                         apf[i + 1, j + 1] = float.PositiveInfinity;
                         continue;
                     }
 
-                    List<Robot.ExploredTile> exploredTileArr = robot.exploredTiles.Where(ep => ep.tile[0] == x && ep.tile[1] == y).ToList();
-                    Robot.ExploredTile exploredTile = null;
+                    List<RobotRERAPF.ExploredTile> exploredTileArr = robot.exploredTiles.Where(ep => ep.tile[0] == x && ep.tile[1] == y).ToList();
+                    RobotRERAPF.ExploredTile exploredTile = null;
                     if (exploredTileArr.Count > 0)
                         exploredTile = exploredTileArr[0];
 
                     // THIS BASICALLY RECALCULATES PREVIOUS STATIC POTENTIAL FOR EVERY EXPLORED TILE
                     // THIS MAY BE FAULTY AND FOR NOW DOES NOT SEEM TO BE INCLUDED IN THE PSEUDO-CODE
-                    foreach(Robot.ExploredTile et in robot.exploredTiles)
+                    foreach(RobotRERAPF.ExploredTile et in robot.exploredTiles)
                         et.UpdateStaticPotential(Relaxation(et));
 
                     float staticPotential = 0, dynamicPotential = 0;
@@ -214,7 +163,7 @@ namespace Assets.Scripts.Path_Planning
                     {
                         // calculate static component potential (goal & obstacle components)
                         staticPotential = CalculateGoalPotential(x, y, tripTiles[2], tripTiles[3])
-                            + CalculateObstaclePotential(x, y, map.tiles);
+                            + CalculateObstaclePotential(x, y, ((TileMap)map).tiles);
                         // add tile to explored tile list
                         robot.AddExploredTile(x, y, staticPotential);
                     }
@@ -242,7 +191,7 @@ namespace Assets.Scripts.Path_Planning
             }
 
             // find the neighboring tile with the lowest potential
-            int[] nextTile = new int[] { robot.currentPosition[0], robot.currentPosition[1] };
+            int[] nextTile = new int[] { robot.currentTile[0], robot.currentTile[1] };
             float lowestPotential = float.MaxValue;
             for (int i = -1; i <= 1; i++)
             {
@@ -257,8 +206,8 @@ namespace Assets.Scripts.Path_Planning
                     float potential = apf[i + 1, j + 1];
                     if (potential < lowestPotential)
                     {
-                        nextTile[0] = robot.currentPosition[0] + i;
-                        nextTile[1] = robot.currentPosition[1] + j;
+                        nextTile[0] = robot.currentTile[0] + i;
+                        nextTile[1] = robot.currentTile[1] + j;
                         lowestPotential = potential;
                     }
                 }
@@ -304,15 +253,15 @@ namespace Assets.Scripts.Path_Planning
             return obstaclePotential * OBSTACLE_REPULSION_FACTOR;
         }
 
-        private static float CalculateRobotPotential(int xCurr, int yCurr, List<Robot> robots)
+        private static float CalculateRobotPotential(int xCurr, int yCurr, List<RobotRERAPF> robots)
         {
             float robotPotential = 0;
 
             // Loop through each robot in the map
-            foreach (Robot r in robots)
+            foreach (RobotRERAPF r in robots)
             {
                 // Calculate the distance to the robot
-                float distanceToRobot = Vector2.Distance(new Vector2(xCurr, yCurr), new Vector2(r.currentPosition[0], r.currentPosition[1]));
+                float distanceToRobot = Vector2.Distance(new Vector2(xCurr, yCurr), r.position);
 
                 // If the distance is within the influence radius
                 if (distanceToRobot < ROBOT_INFLUENCE_RADIUS)
@@ -327,12 +276,12 @@ namespace Assets.Scripts.Path_Planning
         }
 
 
-        private static float Excitation(Robot.ExploredTile exploredTile)
+        private static float Excitation(RobotRERAPF.ExploredTile exploredTile)
         {
             return EXCITATION_FACTOR * exploredTile.GetPrevStaticPotential();
         }
 
-        private static float Relaxation(Robot.ExploredTile exploredTile)
+        private static float Relaxation(RobotRERAPF.ExploredTile exploredTile)
         {
             if (exploredTile.GetStartStaticPotential() == null)
                 throw new Exception("Start static potential is null! Cannot complete relaxation value calculation!");
