@@ -2,96 +2,171 @@
 using Assets.Scripts.Path_Planning;
 using Assets.Scripts.Robot;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace Assets.Scripts
 {
     public class Metrics
     {
+        public enum Measurement
+        {
+            Efficiency, MemoryUsage, AverageOptimality, AverageSmoothness, None
+        }
+
         public Metrics(PathfindingAlgorithm algorithm)
         {
             this.algorithm = algorithm;
         }
 
+        public Measurement measurement;
+        public Action callback;
+
         private PathfindingAlgorithm algorithm;
-        private List<RobotBase> robots;
-        private MapBase map;
-        private MonoBehaviour coroutineProvider;
+        public List<RobotBase> robots;
+        public MapBase map;
 
-        public void SetRobots(List<RobotBase> robots)
+
+        #region Measurements
+
+        private Stopwatch stopwatch;
+        private double? efficiency = null;
+        public double? GetEfficiency()
         {
-            this.robots = robots;
-        }
-        public void SetMap(MapBase map)
-        {
-            this.map = map;
-        }
-        public void SetCoroutineProvider(MonoBehaviour coroutineProvider)
-        {
-            this.coroutineProvider = coroutineProvider;
+            return efficiency;
         }
 
+        private long? memory = null;
+        private long memoryStart;
+        public double? GetMemoryUsage()
+        {
+            return memory;
+        }
+
+        private float? averageSmoothness = null;
+        public float? GetAverageSmoothness()
+        {
+            return averageSmoothness;
+        }
+
+        private AStar astar;
+        private float? averageOptimality = null;
+        public float? GetAverageOptimality()
+        {
+            return averageOptimality;
+        }
+
+        public bool calculationInProgress = false;
+
+        #endregion Measurements
 
 
-        public long CalculateMemoryUsage()
+        public void StartCalculation()
+        {
+            calculationInProgress = true;
+            switch (measurement)
+            {
+                default:
+                case Measurement.Efficiency:
+                    StartEficiencyCalculation();
+                    break;
+                case Measurement.MemoryUsage:
+                    StartMemoryUsageCalculation();
+                    break;
+                case Measurement.AverageSmoothness:
+                    StartAverageSmoothnessCalculation();
+                    break;
+            }
+        }
+
+        public void StopCalculation()
+        {
+            switch (measurement)
+            {
+                default:
+                case Measurement.Efficiency:
+                    StopEfficiencyCalculation();
+                    break;
+                case Measurement.MemoryUsage:
+                    StopMemoryUsageCalculation();
+                    break;
+                case Measurement.AverageSmoothness:
+                    StopAverageSmoothnessCalculation();
+                    break;
+            }
+            calculationInProgress = false;
+        }
+
+        private void StartMemoryUsageCalculation()
         {
             // Collect garbage before measuring memory usage
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
 
-            // Start the process
-            var process = Process.GetCurrentProcess();
+            memoryStart = Profiler.GetTotalAllocatedMemoryLong();
 
-            // Call the method and measure memory usage
-            algorithm.FindPaths(robots, coroutineProvider);
-
-            // Get the memory usage in bytes
-            return process.PrivateMemorySize64;
+            // Run the pathplanning algo
+            algorithm.FindPaths(robots);
+        }
+        public void StopMemoryUsageCalculation()
+        {
+            memory = Profiler.GetTotalAllocatedMemoryLong() - memoryStart;
         }
 
-        public double CalculateEficiency()
+        private void StartEficiencyCalculation()
         {
-            Stopwatch stopwatch = new Stopwatch();
+            stopwatch = new Stopwatch();
             stopwatch.Start();
 
             // Run the path planning algorithm
-            algorithm.FindPaths(robots, coroutineProvider);
-
+            algorithm.FindPaths(robots);
+        }
+        public void StopEfficiencyCalculation()
+        {
             stopwatch.Stop();
-
-            // get efficiency in milliseconds
-            return stopwatch.Elapsed.TotalMilliseconds;
+            efficiency = stopwatch.Elapsed.TotalSeconds;
         }
 
-        public float CalculateOptimality()
+        private void StartAverageOptimalityCalculation()
         {
-            /*
-            // calculate shortest path possible & get it's length
-            AStar astar = new AStar();
-            List<Vector2> shortestPath = astar.FindPath(robots, map);
-            float shortestPathLength = 0f;
-            for (int i = 0; i < shortestPath.Count - 1; i++)
-                shortestPathLength += Vector2.Distance(shortestPath[i], shortestPath[i + 1]);
+            // run shortes path calculation algorithm
+            astar = new AStar((TileMap)map);
+            astar.FindPaths(robots); // find shortest paths - use A*
+            algorithm.FindPaths(robots); // find paths - use current algorithm
+        }
+        private void StopAverageOptimalityCalculation()
+        {
+            float averageOptimality = 0;
 
-            // calculate current path possible & get it's length
-            List<Vector2> currentPath = algorithm(robots, map);
-            float currentPathLength = 0f;
-            for (int i = 0; i < currentPath.Count - 1; i++)
-                currentPathLength += Vector2.Distance(currentPath[i], currentPath[i + 1]);
+            // go through each robot's path
+            for (int n = 0; n < astar.paths.Count; n++)
+            {
+                float shortestPathLength = 0f;
+                for (int i = 0; i < astar.paths[n].Item2.Count - 1; i++)
+                    shortestPathLength += Vector2.Distance(astar.paths[n].Item2[i], astar.paths[n].Item2[i + 1]);
 
-            // compare the shortest path length to the algorithm's path length [0 - 1]
-            return shortestPathLength / currentPathLength;*/
-            return 0;
+                float currentPathLength = 0f;
+                for (int i = 0; i < algorithm.paths[n].Item2.Count - 1; i++)
+                    currentPathLength += Vector2.Distance(algorithm.paths[n].Item2[i], algorithm.paths[n].Item2[i + 1]);
+
+                // compare the shortest path length to the algorithm's path length [0 - 1]
+                averageOptimality += shortestPathLength / currentPathLength;
+            }
+
+            this.averageOptimality = averageOptimality / robots.Count;
         }
 
-        public float CalculateSmoothness()
+        private void StartAverageSmoothnessCalculation()
         {
-            algorithm.FindPaths(robots, coroutineProvider);
-
-            float avgSmoothness = 0f;
+            algorithm.FindPaths(robots);
+        }
+        private void StopAverageSmoothnessCalculation()
+        {
+            float smoothnessSum = 0f;
 
             foreach (Tuple<RobotBase, List<Vector2>> path in algorithm.paths)
             {
@@ -107,15 +182,12 @@ namespace Assets.Scripts
                     float length = (p2 - p0).sqrMagnitude;
 
                     if (length > 0f)
-                    {
                         smoothness += diff / length;
-                    }
                 }
-                avgSmoothness += smoothness;
+                smoothnessSum += smoothness;
             }
 
-            return avgSmoothness / algorithm.paths.Count;
+            this.averageSmoothness = smoothnessSum / algorithm.paths.Count;
         }
-
     }
 }

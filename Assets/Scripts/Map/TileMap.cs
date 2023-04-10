@@ -112,7 +112,6 @@ namespace Assets.Scripts.Map
 
             int[] tile = XYToTile(x, y);
 
-            // SKETCHY - BASICALLY GETS CLOSEST UNOBSTRUCTED LINE TO THE RIGHT
             int i = tile[0];
             while (tiles[i, tile[1]] == 1)
                 i++;
@@ -124,19 +123,19 @@ namespace Assets.Scripts.Map
         {
             int[] tileStart = null; int[] tileEnd = null;
             // from
-            if (trip.from.CompareTag("Shelf"))
-                tileStart = GetShelfTile(trip.from);
-            else if (trip.from.CompareTag("ZoneLoad") || trip.from.CompareTag("ZoneUnload")
-                || trip.from.CompareTag("Robot"))
-                tileStart = XYToTile(trip.from.GetComponent<Renderer>().bounds.center.x
-                    , trip.from.GetComponent<Renderer>().bounds.center.y);
+            if (trip.fromLinkedTransform.CompareTag("Shelf"))
+                tileStart = GetShelfTile(trip.fromLinkedTransform);
+            else if (trip.fromLinkedTransform.CompareTag("ZoneLoad") || trip.fromLinkedTransform.CompareTag("ZoneUnload")
+                || trip.fromLinkedTransform.CompareTag("Robot"))
+                tileStart = XYToTile(trip.fromLinkedTransform.GetComponent<Renderer>().bounds.center.x
+                    , trip.fromLinkedTransform.GetComponent<Renderer>().bounds.center.y);
 
             // to
-            if (trip.to.CompareTag("Shelf"))
-                tileEnd = GetShelfTile(trip.to);
-            else if (trip.to.CompareTag("ZoneLoad") || trip.to.CompareTag("ZoneUnload"))
-                tileEnd = XYToTile(trip.to.GetComponent<Renderer>().bounds.center.x
-                    , trip.to.GetComponent<Renderer>().bounds.center.y);
+            if (trip.toLinkedTransform.CompareTag("Shelf"))
+                tileEnd = GetShelfTile(trip.toLinkedTransform);
+            else if (trip.toLinkedTransform.CompareTag("ZoneLoad") || trip.toLinkedTransform.CompareTag("ZoneUnload"))
+                tileEnd = XYToTile(trip.toLinkedTransform.GetComponent<Renderer>().bounds.center.x
+                    , trip.toLinkedTransform.GetComponent<Renderer>().bounds.center.y);
 
             return new[] { tileStart[0], tileStart[1], tileEnd[0], tileEnd[1] };
         }
@@ -171,26 +170,6 @@ namespace Assets.Scripts.Map
             //tileObj.transform.localScale = new Vector3(tileSize, tileSize, 1f);
             tileObj.GetComponent<SpriteRenderer>().size = new Vector2(sizeX == 0 ? tileSize : sizeX, sizeY == 0 ? tileSize : sizeY);
             return tileObj;
-        }
-
-        public override void DrawPath(List<Vector2> path, Color color)
-        {
-            LineRenderer lineRenderer = GameObject.Instantiate(pathPrefab).GetComponent<LineRenderer>();
-
-            // Set the position count of the LineRenderer to the number of points in the path
-            lineRenderer.positionCount = path.Count;
-
-            // Set the positions of the LineRenderer to the points in the path
-            for (int i = 0; i < path.Count; i++)
-            {
-                Vector2 point = new Vector2(path[i].x, path[i].y);
-                lineRenderer.SetPosition(i, point);
-            }
-
-            // Customize the look of the LineRenderer
-            lineRenderer.startWidth = 0.1f;
-            lineRenderer.endWidth = 0.1f;
-            lineRenderer.material.color = color;
         }
 
         #endregion Drawing

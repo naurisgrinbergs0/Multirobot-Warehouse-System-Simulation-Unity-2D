@@ -10,14 +10,19 @@ namespace Assets.Scripts
 {
     public class Trip
     {
-        public Transform from;
-        public Transform to;
+        public Vector2? from;
+        public Vector2? to;
+        public Transform fromLinkedTransform;
+        public Transform toLinkedTransform;
         public bool isCargoTrip;
 
-        public Trip(Transform from, Transform to, bool isCargoTrip)
+        public Trip(Vector2? from = null, Vector2? to = null
+            , Transform fromLinkedTransform = null, Transform toLinkedTransform = null, bool isCargoTrip = false)
         {
             this.from = from;
             this.to = to;
+            this.fromLinkedTransform = fromLinkedTransform;
+            this.toLinkedTransform = toLinkedTransform;
             this.isCargoTrip = isCargoTrip;
         }
 
@@ -32,7 +37,7 @@ namespace Assets.Scripts
             // Add first trip from robot to a shelf
             Transform from = robot;
             Transform to = shelfTransforms[Random.Range(0, shelfTransforms.Length)];
-            Trip firstTrip = new Trip(from, to, false);
+            Trip firstTrip = new Trip(fromLinkedTransform: from, toLinkedTransform: to, isCargoTrip: false);
             tripList.Add(firstTrip);
             lastShelf = to;
             from = to;
@@ -71,7 +76,7 @@ namespace Assets.Scripts
                     lastShelf = nextTo;
                 }
 
-                Trip nextTrip = new Trip(from, nextTo, isCargoTrip);
+                Trip nextTrip = new Trip(fromLinkedTransform: from, toLinkedTransform: nextTo, isCargoTrip: isCargoTrip);
                 tripList.Add(nextTrip);
                 from = nextTo;
             }

@@ -674,6 +674,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1376811392}
     - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: simulationMode
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: robotFloorPrefab
       value: 
       objectReference: {fileID: 711411417}

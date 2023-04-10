@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -28,15 +29,24 @@ namespace Assets.Scripts.Path_Planning
         }
 
 
-        public override void FindPaths(List<RobotBase> robots, MonoBehaviour coroutineProvider)
+        public override void FindPaths(List<RobotBase> robots)
         {
-            paths.AddRange(robots.Select(r => new Tuple<RobotBase, List<Vector2>>(r, new List<Vector2>())));
+            base.FindPaths(robots);
+            foreach (RobotBase rb in robots)
+            {
+                if (rb.trips.Count > 0)
+                {
+                    int[] tile = ((TileMap)map).XYToTile(rb.position.x, rb.position.y);
+                    ((RobotRERAPF)rb).currentTile = tile;
+                }
+            }
 
-            coroutineProvider.StartCoroutine(MoveRobots(robots.Select(r => (RobotRERAPF)r).ToList(), coroutineProvider));
+            paths.AddRange(robots.Select(r => new Tuple<RobotBase, List<Vector2>>(r, new List<Vector2>())));
+            coroutineProvider.StartCoroutine(MoveRobots(robots.Select(r => (RobotRERAPF)r).ToList()));
         }
 
 
-        private IEnumerator MoveRobots(List<RobotRERAPF> robots, MonoBehaviour coroutineProvider)
+        private IEnumerator MoveRobots(List<RobotRERAPF> robots)
         {
             // Create a coroutine for each robot
             List<IEnumerator> coroutines = new List<IEnumerator>();
@@ -55,7 +65,7 @@ namespace Assets.Scripts.Path_Planning
                 // Check if any robot still has an unfinished path
                 foreach (RobotRERAPF robot in robots)
                 {
-                    if (robot.trips.Count > 0)
+                    if (robot.tripIndex < robot.trips.Count)
                     {
                         finished = false;
                         break;
@@ -64,27 +74,18 @@ namespace Assets.Scripts.Path_Planning
 
                 yield return null;
             }
-            isFinished = true;
+            if(metrics?.callback != null)
+                metrics.callback.Invoke();
         }
 
 
         public IEnumerator MoveRobot(RobotRERAPF robot, List<RobotRERAPF> robots)
         {
             // loop until robot has reached the goal
-            //bool newGoal = true;
-            while (robot.trips.Count() > 0)
+            while (robot.tripIndex < robot.trips.Count)
             {
                 // if goal is not reached
-                int[] tripTiles = ((TileMap)map).GetTripTiles(robot.trips.First());
-                /*
-                if (newGoal)
-                {
-                    if (robot.goalTileGameObject)
-                        UnityEngine.Object.Destroy(robot.goalTileGameObject);
-                    robot.goalTileGameObject = map.DrawGoalTile(tripTiles[2], tripTiles[3]);
-                }
-                newGoal = false;
-                */
+                int[] tripTiles = ((TileMap)map).GetTripTiles(robot.trips[robot.tripIndex]);
                 if (robot.currentTile[0] != tripTiles[2] || robot.currentTile[1] != tripTiles[3])
                 {
                     // artificial potential field pathfinding
@@ -103,13 +104,12 @@ namespace Assets.Scripts.Path_Planning
                     // if goal reached - remove trip & delete visited tiles
                     if (nextTile[0] == tripTiles[2] && nextTile[1] == tripTiles[3])
                     {
-                        robot.trips.RemoveAt(0);
+                        robot.tripIndex++;
                         robot.exploredTiles.Clear();
-                        //newGoal = true;
                     }
                     map.DrawRobot(robot);
                     paths.Where(p => p.Item1 == robot).First().Item2.Add(robot.position);
-                    map.DrawPath(paths.Where(p => p.Item1 == robot).First().Item2, robot.color);
+                    map.DrawPath(paths.Where(p => p.Item1 == robot).First().Item2, robot); //problema
                 }
                 yield return null;
             }

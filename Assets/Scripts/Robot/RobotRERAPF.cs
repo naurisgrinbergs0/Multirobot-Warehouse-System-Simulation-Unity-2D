@@ -30,16 +30,14 @@ namespace Assets.Scripts.Robot
             exploredTiles.Add(new ExploredTile(x, y, staticPotential));
         }
 
-        //public PathRenderer pathRenderer;
         public List<ExploredTile> exploredTiles = new List<ExploredTile>();
         public int[] currentTile;
 
-        public RobotRERAPF(List<Trip> trips, Map.TileMap map)
+        public RobotRERAPF(List<Trip> trips, Transform robotTransform, Color color, Map.TileMap map)
+            : base(trips, robotTransform, color)
         {
-            this.trips = trips;
-
             // set current position
-            currentTile = map.XYToTile(trips.First().from.position.x, trips.First().from.position.y);
+            currentTile = map.XYToTile(trips.First().fromLinkedTransform.position.x, trips.First().fromLinkedTransform.position.y);
             var pos = map.TileToXY(currentTile[0], currentTile[1]);
             position = new Vector2(pos[0], pos[1]);
         }
