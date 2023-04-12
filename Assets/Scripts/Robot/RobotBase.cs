@@ -14,6 +14,7 @@ namespace Assets.Scripts.Robot
         public Vector2 position;
         public Transform robotTransform;
         public GameObject robotPathGameObject;
+        public GameObject robotCargoGameObject;
         public Color color = Color.red;
 
         public RobotBase(List<Trip> trips, Transform robotTransform, Color color)

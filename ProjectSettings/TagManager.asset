@@ -69,3 +69,6 @@ TagManager:
   - name: Goals
     uniqueID: 3276784509
     locked: 0
+  - name: Cargo
+    uniqueID: 1676631467
+    locked: 0

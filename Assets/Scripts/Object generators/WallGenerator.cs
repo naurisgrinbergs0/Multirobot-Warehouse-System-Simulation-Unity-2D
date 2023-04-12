@@ -5,7 +5,7 @@ public class WallGenerator : MonoBehaviour
 {
     public GameObject WallPrefab;
     public GameObject FloorPrefab;
-    public float wallThickness = 0.5f;
+    public static float wallThickness = 0.5f;
 
     public GameObject[] GenerateWalls()
     {

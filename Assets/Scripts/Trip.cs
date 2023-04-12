@@ -27,64 +27,114 @@ namespace Assets.Scripts
         }
 
 
+        //public static List<Trip> GenerateTripList(Transform robot, Transform[] shelfTransforms, Transform zoneLoadTransform,
+        //    Transform zoneUnloadTransform, int numberOfTrips)
+        //{
+        //    List<Trip> tripList = new List<Trip>();
+        //    Transform lastShelf = null;
+        //    Transform lastUnloadZone = null;
+
+        //    // Add first trip from robot to a shelf
+        //    Transform from = robot;
+        //    Transform to = shelfTransforms[Random.Range(0, shelfTransforms.Length)];
+        //    Trip firstTrip = new Trip(fromLinkedTransform: from, toLinkedTransform: to, isCargoTrip: false);
+        //    tripList.Add(firstTrip);
+        //    lastShelf = to;
+        //    from = to;
+
+        //    for (int i = 1; i < numberOfTrips; i++)
+        //    {
+        //        // Determine the trip type
+        //        Transform nextFrom = from; // Initialize nextFrom with the previous trip's end point
+        //        Transform nextTo = null;
+
+        //        if (lastShelf == null || Random.Range(0, 2) == 0)
+        //        {
+        //            // From load zone to shelf
+        //            nextFrom = zoneLoadTransform;
+        //            nextTo = shelfTransforms[Random.Range(0, shelfTransforms.Length)];
+        //            lastShelf = nextTo;
+        //            lastUnloadZone = null;
+        //        }
+        //        else if (lastUnloadZone == null || Random.Range(0, 2) == 0)
+        //        {
+        //            // From shelf to unload zone
+        //            nextTo = zoneUnloadTransform;
+        //            lastUnloadZone = nextTo;
+        //            lastShelf = null;
+        //        }
+        //        else
+        //        {
+        //            // From shelf to shelf
+        //            nextTo = shelfTransforms.Where(st => st != nextFrom).ToArray()[Random.Range(0, shelfTransforms.Length)];
+        //            lastShelf = nextTo;
+        //            lastUnloadZone = null;
+        //        }
+
+        //        Trip nextTrip = new Trip(fromLinkedTransform: nextFrom, toLinkedTransform: nextTo, isCargoTrip: i % 2 == 1);
+        //        tripList.Add(nextTrip);
+        //        from = nextTo;
+        //    }
+
+        //    return tripList;
+
+        //}
+
         public static List<Trip> GenerateTripList(Transform robot, Transform[] shelfTransforms, Transform zoneLoadTransform,
             Transform zoneUnloadTransform, int numberOfTrips)
         {
             List<Trip> tripList = new List<Trip>();
-            Transform lastShelf = null;
-            Transform lastUnloadZone = null;
 
-            // Add first trip from robot to a shelf
+            bool isLastShelf = false;
+            bool isLastUnloadZone = false;
+            bool isLastLoadZone = false;
+            bool isLastCargoTrip = false;
             Transform from = robot;
-            Transform to = shelfTransforms[Random.Range(0, shelfTransforms.Length)];
-            Trip firstTrip = new Trip(fromLinkedTransform: from, toLinkedTransform: to, isCargoTrip: false);
-            tripList.Add(firstTrip);
-            lastShelf = to;
-            from = to;
+            Transform to = null;
 
-            for (int i = 0; i < numberOfTrips - 1; i++)
+            for (int i = 0; i < numberOfTrips; i++)
             {
-                // Determine the trip type
-                bool isCargoTrip = (i + 1) % 2 == 0;
-                Transform nextFrom = null;
-                Transform nextTo = null;
+                if(i != 0)
+                    from = to;
 
-                if (lastShelf == null || Random.Range(0, 2) == 0)
+                // if last 'to' was shelf
+                if (isLastShelf)
                 {
-                    // From load zone to shelf
-                    isCargoTrip = false;
-                    nextFrom = zoneLoadTransform;
-                    nextTo = shelfTransforms[Random.Range(0, shelfTransforms.Length)];
-                    lastShelf = nextTo;
+                    to = isLastCargoTrip
+                        ? Random.Range(0, 2) == 0
+                            ? shelfTransforms.Where(st => st != from).ToArray()[Random.Range(0, shelfTransforms.Length - 1)]
+                            : zoneLoadTransform
+                        : Random.Range(0, 2) == 0
+                            ? shelfTransforms.Where(st => st != from).ToArray()[Random.Range(0, shelfTransforms.Length - 1)]
+                            : zoneUnloadTransform
+                            ;
                 }
-                else if (lastUnloadZone == null || Random.Range(0, 2) == 0)
+                // if last 'to' was load zone
+                else if (isLastLoadZone)
                 {
-                    // From shelf to unload zone
-                    nextFrom = shelfTransforms[Random.Range(0, shelfTransforms.Length)];
-                    nextTo = zoneUnloadTransform;
-                    lastUnloadZone = nextTo;
+                    to = shelfTransforms[Random.Range(0, shelfTransforms.Length)];
                 }
+                // if last 'to' was unload zone or last 'to' is null
                 else
                 {
-                    // From shelf to shelf
-                    nextFrom = shelfTransforms[Random.Range(0, shelfTransforms.Length)];
-                    nextTo = shelfTransforms[Random.Range(0, shelfTransforms.Length)];
-                    while (nextTo == nextFrom)
-                    {
-                        nextTo = shelfTransforms[Random.Range(0, shelfTransforms.Length)];
-                    }
-                    lastShelf = nextTo;
+                    to = Random.Range(0, 2) == 0
+                            ? shelfTransforms[Random.Range(0, shelfTransforms.Length)]
+                            : zoneLoadTransform
+                            ;
                 }
 
-                Trip nextTrip = new Trip(fromLinkedTransform: from, toLinkedTransform: nextTo, isCargoTrip: isCargoTrip);
-                tripList.Add(nextTrip);
-                from = nextTo;
+                tripList.Add(new Trip(fromLinkedTransform: from, toLinkedTransform: to, isCargoTrip: i % 2 == 1));
+
+                // store last trip settings
+                isLastUnloadZone = to == zoneUnloadTransform;
+                isLastLoadZone = to == zoneLoadTransform;
+                isLastShelf = !isLastUnloadZone && !isLastLoadZone;
+                isLastCargoTrip = i % 2 == 1;
             }
 
             return tripList;
+
         }
-
-
     }
 
 

@@ -19,6 +19,7 @@ public class Entry : MonoBehaviour
 
     public PathFindingAlgorithmEnum pathFindingAlgorithmEnum = PathFindingAlgorithmEnum.RERAPF;
     public SimulationMode simulationMode = SimulationMode.Graphics;
+    public int numberOfTrips = 1;
 
     public Transform floorGameTransform;
     public Transform shelfFloorTransform;
@@ -27,6 +28,7 @@ public class Entry : MonoBehaviour
     public Transform loadZoneTransform;
     public Transform unloadZoneTransform;
 
+    public GameObject robotCargoPrefab;
     public GameObject robotPathPrefab;
     public GameObject robotPrefab;
 
@@ -34,6 +36,8 @@ public class Entry : MonoBehaviour
     public GameObject goalTilePrefab;
 
     private Metrics metrics;
+    private CSVExporter csvExporter;
+    List<RobotBase> robots;
 
     private void Start()
     {
@@ -50,6 +54,7 @@ public class Entry : MonoBehaviour
         switch (pathFindingAlgorithmEnum)
         {
             case PathFindingAlgorithmEnum.RERAPF:
+            case PathFindingAlgorithmEnum.ImporvedAStar:
                 {
                     map = new TileMap(floorGameTransform, shelfGameObjects, wallGameObjects, tileSize);
                     ((TileMap)map).DrawObstructedTiles(tilePrefab);
@@ -58,22 +63,26 @@ public class Entry : MonoBehaviour
         }
         map.robotPrefab = robotPrefab;
         map.robotPathPrefab = robotPathPrefab;
+        map.robotCargoPrefab = robotCargoPrefab;
         map.drawGraphics = simulationMode == SimulationMode.Graphics || simulationMode == SimulationMode.MetricsAndGraphics;
 
 
         // make trips for robots
-        var robotsWithTrips = new List<RobotBase>();
+        int seed = System.Environment.TickCount;
+        Random.InitState(seed);
+        robots = new List<RobotBase>();
         foreach (Transform rt in robotGameObjects)
         {
-            List<Trip> trips = Trip.GenerateTripList(rt, shelfGameObjects, loadZoneTransform, unloadZoneTransform, 1);
+            List<Trip> trips = Trip.GenerateTripList(rt, shelfGameObjects, loadZoneTransform, unloadZoneTransform, numberOfTrips);
             RobotBase robot = null;
+
+            Color c = Random.ColorHSV();
+            c.a = 0.3f;
 
             switch (pathFindingAlgorithmEnum)
             {
                 case PathFindingAlgorithmEnum.RERAPF:
                     {
-                        Color c = Random.ColorHSV();
-                        c.a = 0.3f;
                         robot = new RobotRERAPF(trips, rt, c, (TileMap)map);
                         robot.trips.ForEach((Trip t) => {
                             int[] tt = ((TileMap)map).GetTripTiles(t);
@@ -84,8 +93,20 @@ public class Entry : MonoBehaviour
                         });
                         break;
                     }
+                case PathFindingAlgorithmEnum.ImporvedAStar:
+                    {
+                        robot = new RobotImprovedAStar(trips, rt, c);
+                        robot.trips.ForEach((Trip t) => {
+                            int[] tt = ((TileMap)map).GetTripTiles(t);
+                            float[] xy1 = ((TileMap)map).TileToXY(tt[0], tt[1]);
+                            float[] xy2 = ((TileMap)map).TileToXY(tt[2], tt[3]);
+                            t.from = new Vector2(xy1[0], xy1[1]);
+                            t.to = new Vector2(xy2[0], xy2[1]);
+                        });
+                        break;
+                    }
             }
-            robotsWithTrips.Add(robot);
+            robots.Add(robot);
         }
 
         // set up algorithm
@@ -98,22 +119,40 @@ public class Entry : MonoBehaviour
                     pathFindingAlgorithm = new RERAPF((TileMap)map);
                     break;
                 }
+            case PathFindingAlgorithmEnum.ImporvedAStar:
+                {
+                    pathFindingAlgorithm = new ImprovedAStar((TileMap)map);
+                    break;
+                }
         }
         pathFindingAlgorithm.coroutineProvider = this;
 
-        // measure metrics
-        metrics = new Metrics(pathFindingAlgorithm);
-        metrics.measurement = Metrics.Measurement.MemoryUsage;
-        metrics.callback = SaveMemoryUsage;
-        metrics.map = map;
-        metrics.robots = robotsWithTrips;
-        pathFindingAlgorithm.metrics = metrics;
+        // set up csv exporter
+        csvExporter = new CSVExporter("C://temp/Metrics.csv");
+        csvExporter.CreateTableIfNotExists(new[] { "Algorithm", "NumOfRobots", "Efficiency", "UsedMemory", "Optimality", "Smoothness" });
+
+        // set up metrics or simulate right away
+        if (simulationMode == SimulationMode.Metrics || simulationMode == SimulationMode.MetricsAndGraphics)
+        {
+            // set up metrics
+            metrics = new Metrics(pathFindingAlgorithm);
+            metrics.measurement = Metrics.Measurement.MemoryUsage;
+            metrics.callback = SaveMemoryUsage;
+            metrics.map = map;
+            metrics.robots = robots;
+            pathFindingAlgorithm.metrics = metrics;
+        }
+        else if (simulationMode == SimulationMode.Graphics)
+        {
+            // simulate
+            pathFindingAlgorithm.FindPaths(robots);
+        }
     }
 
     private void Update()
     {
         // calculate every measurement one by one
-        if (metrics.measurement != Metrics.Measurement.None && !metrics.calculationInProgress)
+        if (metrics != null && metrics.measurement != Metrics.Measurement.None && !metrics.calculationInProgress)
         {
             ResetState();
             metrics.StartCalculation();
@@ -156,5 +195,15 @@ public class Entry : MonoBehaviour
         // store value
         Debug.Log($"Smoo: {metrics.GetAverageSmoothness()}");
         metrics.measurement = Metrics.Measurement.None;
+        SaveMetricsToFile();
+    }
+
+    private void SaveMetricsToFile()
+    {
+        csvExporter.AddRecord(new string[] {
+            System.Enum.GetName(typeof(PathFindingAlgorithmEnum), pathFindingAlgorithmEnum), robots.Count.ToString()
+            , metrics.GetEfficiency().ToString(), metrics.GetMemoryUsage().ToString()
+            ,  metrics.GetAverageOptimality().ToString(), metrics.GetAverageSmoothness().ToString()
+        });
     }
 }

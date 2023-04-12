@@ -12,7 +12,6 @@ namespace Assets.Scripts.Robot
         public RobotAStar(List<Trip> trips, Transform robotTransform, Color color)
             : base(trips, robotTransform, color) 
         {
-
         }
     }
 }

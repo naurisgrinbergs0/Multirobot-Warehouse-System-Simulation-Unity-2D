@@ -13,19 +13,13 @@ namespace Assets.Scripts.Map
     {
         public int[,] tiles;
         public float tileSize;
-        //public GameObject tilePrefab;
-        //public GameObject tileGoalPrefab;
 
-        private const float marginAroundObstacles = 1f;
+        private const float marginAroundObstacles = 0.5f;
 
-        public TileMap(Transform floor, Transform[] shelves, Transform[] walls, float tileSize/*, GameObject tilePrefab, GameObject tileGoalPrefab*/)
+        public TileMap(Transform floor, Transform[] shelves, Transform[] walls, float tileSize)
+            : base(floor, shelves, walls)
         {
-            this.floor = floor;
-            this.shelves = shelves;
-            this.walls = walls;
             this.tileSize = tileSize;
-            //this.tilePrefab = tilePrefab;
-            //this.tileGoalPrefab = tileGoalPrefab;
             tiles = GenerateMap();
         }
 

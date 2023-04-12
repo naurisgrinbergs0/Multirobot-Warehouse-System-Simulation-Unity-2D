@@ -13,8 +13,16 @@ namespace Assets.Scripts.Map
 
         public GameObject robotPrefab;
         public GameObject robotPathPrefab;
+        public GameObject robotCargoPrefab;
 
         public bool drawGraphics = true;
+
+        public MapBase(Transform floor, Transform[] shelves, Transform[] walls)
+        {
+            this.floor = floor;
+            this.shelves = shelves;
+            this.walls = walls;
+        }
 
         public void DrawPath(List<Vector2> path, RobotBase robot)
         {
@@ -41,7 +49,7 @@ namespace Assets.Scripts.Map
                 lineRenderer.material.color = robot.color;
             }
         }
-        public void DrawRobot(RobotBase robot)
+        public void DrawRobot(RobotBase robot, bool isCargoTrip)
         {
             if (drawGraphics)
             {
@@ -49,6 +57,19 @@ namespace Assets.Scripts.Map
                 robot.robotTransform.position = robot.position;
                 Color c = new Color(robot.color.r, robot.color.g, robot.color.b, 0.6f);
                 robot.robotTransform.gameObject.GetComponent<SpriteRenderer>().color = c;
+
+                if (isCargoTrip)
+                {
+                    if (robot.robotCargoGameObject == null)
+                        robot.robotCargoGameObject = GameObject.Instantiate(robotCargoPrefab);
+                    robot.robotCargoGameObject.SetActive(true);
+                    robot.robotCargoGameObject.transform.position = robot.position;
+                }
+                else
+                {
+                    if (robot.robotCargoGameObject != null)
+                        robot.robotCargoGameObject.SetActive(false);
+                }
             }
         }
     }

@@ -13,19 +13,18 @@ namespace Assets.Scripts.Path_Planning
 {
     class RERAPF : PathfindingAlgorithm
     {
-        private const float ROBOT_REPULSION_FACTOR = 120f;
+        private const float ROBOT_REPULSION_FACTOR = 5f;
         private const float OBSTACLE_REPULSION_FACTOR = 5f;
-        private const float GOAL_ATTRACTION_FACTOR = 10f;
+        private const float GOAL_ATTRACTION_FACTOR = 5f;
 
-        private const float EXCITATION_FACTOR = 5f;
-        private const float RELAXATION_FACTOR = 0.5f;
+        private const float EXCITATION_FACTOR = 1.1f;
+        private const float RELAXATION_FACTOR = 0.1f;
 
         private const float OBSTACLE_INFLUENCE_RADIUS = 2f;
         private const float ROBOT_INFLUENCE_RADIUS = 3f;
 
-        public RERAPF(TileMap map)
+        public RERAPF(TileMap map) : base(map)
         {
-            this.map = map;
         }
 
 
@@ -84,8 +83,9 @@ namespace Assets.Scripts.Path_Planning
             // loop until robot has reached the goal
             while (robot.tripIndex < robot.trips.Count)
             {
+                Trip trip = robot.trips[robot.tripIndex];
                 // if goal is not reached
-                int[] tripTiles = ((TileMap)map).GetTripTiles(robot.trips[robot.tripIndex]);
+                int[] tripTiles = ((TileMap)map).GetTripTiles(trip);
                 if (robot.currentTile[0] != tripTiles[2] || robot.currentTile[1] != tripTiles[3])
                 {
                     // artificial potential field pathfinding
@@ -107,7 +107,7 @@ namespace Assets.Scripts.Path_Planning
                         robot.tripIndex++;
                         robot.exploredTiles.Clear();
                     }
-                    map.DrawRobot(robot);
+                    map.DrawRobot(robot, trip.isCargoTrip);
                     paths.Where(p => p.Item1 == robot).First().Item2.Add(robot.position);
                     map.DrawPath(paths.Where(p => p.Item1 == robot).First().Item2, robot); //problema
                 }

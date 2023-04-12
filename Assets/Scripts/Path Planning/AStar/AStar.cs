@@ -9,9 +9,8 @@ using UnityEngine;
 
 public class AStar : PathfindingAlgorithm
 {
-    public AStar(TileMap map)
+    public AStar(TileMap map) : base(map)
     {
-        this.map = map;
     }
 
 
@@ -76,23 +75,9 @@ public class AStar : PathfindingAlgorithm
         {
             Trip trip = robot.trips.First();
 
-            int[] tileStart = null; int[] tileEnd = null;
-            // from
-            if (trip.fromLinkedTransform.CompareTag("Shelf"))
-                tileStart = ((TileMap)map).GetShelfTile(trip.fromLinkedTransform);
-            else if (trip.fromLinkedTransform.CompareTag("ZoneLoad") || trip.fromLinkedTransform.CompareTag("ZoneUnload")
-                || trip.fromLinkedTransform.CompareTag("Robot"))
-                tileStart = ((TileMap)map).XYToTile(trip.fromLinkedTransform.GetComponent<Renderer>().bounds.center.x
-                    , trip.fromLinkedTransform.GetComponent<Renderer>().bounds.center.y);
+            int[] tripTiles = ((TileMap)map).GetTripTiles(trip);
 
-            // to
-            if (trip.toLinkedTransform.CompareTag("Shelf"))
-                tileEnd = ((TileMap)map).GetShelfTile(trip.toLinkedTransform);
-            else if (trip.toLinkedTransform.CompareTag("ZoneLoad") || trip.toLinkedTransform.CompareTag("ZoneUnload"))
-                tileEnd = ((TileMap)map).XYToTile(trip.toLinkedTransform.GetComponent<Renderer>().bounds.center.x
-                    , trip.toLinkedTransform.GetComponent<Renderer>().bounds.center.y);
-
-            List<Node> path = FindPath(tileStart[0], tileStart[1], tileEnd[0], tileEnd[1]);
+            List<Node> path = FindPath(tripTiles[0], tripTiles[1], tripTiles[2], tripTiles[3]);
 
 
             // draw path
@@ -112,7 +97,7 @@ public class AStar : PathfindingAlgorithm
                 // Move the robot to the target position
                 robot.position = targetPosition;
 
-                map.DrawRobot(robot);
+                map.DrawRobot(robot, trip.isCargoTrip);
                 // Pause for a short time at each node in the path
                 yield return null;
             }

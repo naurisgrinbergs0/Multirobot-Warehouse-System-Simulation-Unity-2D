@@ -17,6 +17,11 @@ namespace Assets.Scripts.Path_Planning
         public MonoBehaviour coroutineProvider;
         public Metrics metrics;
 
+        public PathfindingAlgorithm(MapBase map)
+        {
+            this.map = map;
+        }
+
         public virtual void FindPaths(List<RobotBase> robots)
         {
             // set robot positions to the start of the first trip

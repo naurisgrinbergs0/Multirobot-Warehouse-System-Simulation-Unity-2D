@@ -205,7 +205,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6773727254248497807, guid: d3038552384618a4ab7ce5815c96b5de, type: 3}
       propertyPath: ShelvesHorizontal
-      value: 5
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 7946733424340903479, guid: d3038552384618a4ab7ce5815c96b5de, type: 3}
       propertyPath: m_RootOrder
@@ -272,7 +272,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1287856493256357169, guid: 691d2754e5f61484ebc1dc6710b1bc99, type: 3}
       propertyPath: NumRobots
-      value: 1
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 1287856493256357169, guid: 691d2754e5f61484ebc1dc6710b1bc99, type: 3}
       propertyPath: FloorPrefab
@@ -502,7 +502,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   WallPrefab: {fileID: 2651503791400766873, guid: 8dd797c4a02316b4a955c99beaf1036f, type: 3}
   FloorPrefab: {fileID: 1314896077}
-  wallThickness: 0.5
 --- !u!4 &1314896082 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2778642380648834442, guid: 08d6ef05583139d4795ad92b4f5a5b50, type: 3}
@@ -666,6 +665,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 3228722513869701253, guid: 4daba47b84c1c45408bbb32f36fbe648, type: 3}
     - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: numberOfTrips
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: goalTilePrefab
       value: 
       objectReference: {fileID: 5996227284174011202, guid: 95eceae0cfb374a4aa357bc06b7679c3, type: 3}
@@ -675,8 +678,16 @@ PrefabInstance:
       objectReference: {fileID: 1376811392}
     - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: simulationMode
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: robotPathPrefab
+      value: 
+      objectReference: {fileID: 8526742145013004586, guid: 563ec4e22192c6543b92d05b11ed0bc9, type: 3}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: robotCargoPrefab
+      value: 
+      objectReference: {fileID: 8469726729592479381, guid: 54cf98d6e15c7aa45a36b5e46c5cca30, type: 3}
     - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: robotFloorPrefab
       value: 
@@ -712,6 +723,10 @@ PrefabInstance:
     - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: pathFindingAlgorithm
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: pathFindingAlgorithmEnum
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7757618888419443205, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: m_RootOrder
