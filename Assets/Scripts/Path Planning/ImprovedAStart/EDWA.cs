@@ -18,34 +18,6 @@ public class EDWA
         TimeStep = timeStep;
     }
 
-    //public Vector2 GetVelocityCommand(Vector2 currentPosition, float currentRotation, Vector2 currentVelocity
-    //    , Vector2 targetPosition, List<Transform> obstacles)
-    //{
-    //    float bestScore = float.NegativeInfinity;
-    //    Vector2 bestVelocity = currentVelocity;
-    //    Vector2 currentDirection = new Vector2(Mathf.Cos(currentRotation), Mathf.Sin(currentRotation));
-
-    //    for (float v = -MaxLinearSpeed; v <= MaxLinearSpeed; v += LinearAcceleration * TimeStep)
-    //    {
-    //        for (float omega = -MaxAngularSpeed; omega <= MaxAngularSpeed; omega += AngularAcceleration * TimeStep)
-    //        {
-    //            Vector2 newVelocity = new Vector2(v * currentDirection.x - omega * currentDirection.y, v * currentDirection.y + omega * currentDirection.x);
-
-    //            if (IsCollisionFree(newVelocity, currentPosition, obstacles))
-    //            {
-    //                float score = CalculateScore(newVelocity, targetPosition, currentPosition);
-    //                if (score > bestScore)
-    //                {
-    //                    bestScore = score;
-    //                    bestVelocity = newVelocity;
-    //                }
-    //            }
-    //        }
-    //    }
-
-    //    return bestVelocity;
-    //}
-
     public Vector2 GetVelocityCommand(Vector2 currentPosition, float currentRotation, Vector2 currentVelocity,
         Vector2 targetPosition, List<Transform> obstacles)
     {
@@ -78,14 +50,10 @@ public class EDWA
     private IEnumerable<float> SampleSpeeds(float[] speedConstraints, float acceleration, float timeStep)
     {
         for (float speed = speedConstraints[0]; speed <= speedConstraints[1]; speed += acceleration * timeStep)
-        {
             yield return speed;
-        }
 
         for (float speed = speedConstraints[2]; speed <= speedConstraints[3]; speed += acceleration * timeStep)
-        {
             yield return speed;
-        }
     }
 
 

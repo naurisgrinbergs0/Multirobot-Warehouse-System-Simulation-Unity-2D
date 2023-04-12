@@ -1,32 +1,25 @@
-﻿using System;
+﻿using Assets.Scripts.Path_Planning;
+using Assets.Scripts.Robot;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace Assets.Scripts
+namespace Assets.Scripts.Map
 {
-    public class TileMap
+    public class TileMap : MapBase
     {
         public int[,] tiles;
-        Transform floor;
-        Transform[] shelves;
-        Transform[] walls;
         public float tileSize;
-        public GameObject tilePrefab;
-        public GameObject tileGoalPrefab;
 
-        private const float marginAroundObstacles = 1f;
+        private const float marginAroundObstacles = 0.5f;
 
-        public TileMap(Transform floor, Transform[] shelves, Transform[] walls, float tileSize, GameObject tilePrefab, GameObject tileGoalPrefab)
+        public TileMap(Transform floor, Transform[] shelves, Transform[] walls, float tileSize)
+            : base(floor, shelves, walls)
         {
-            this.floor = floor;
-            this.shelves = shelves;
-            this.walls = walls;
             this.tileSize = tileSize;
-            this.tilePrefab = tilePrefab;
-            this.tileGoalPrefab = tileGoalPrefab;
             tiles = GenerateMap();
         }
 
@@ -105,7 +98,7 @@ namespace Assets.Scripts
                 , floorLowerLeftCorner.y + tileY * tileSize + tileSize / 2};
         }
 
-        public int[] GetShelfTile(GameObject shelf)
+        public int[] GetShelfTile(Transform shelf)
         {
             // take center tile within the shelf
             float x = shelf.GetComponent<Renderer>().bounds.center.x;
@@ -113,7 +106,6 @@ namespace Assets.Scripts
 
             int[] tile = XYToTile(x, y);
 
-            // SKETCHY - BASICALLY GETS CLOSEST UNOBSTRUCTED LINE TO THE RIGHT
             int i = tile[0];
             while (tiles[i, tile[1]] == 1)
                 i++;
@@ -125,19 +117,19 @@ namespace Assets.Scripts
         {
             int[] tileStart = null; int[] tileEnd = null;
             // from
-            if (trip.from.CompareTag("Shelf"))
-                tileStart = GetShelfTile(trip.from);
-            else if (trip.from.CompareTag("ZoneLoad") || trip.from.CompareTag("ZoneUnload")
-                || trip.from.CompareTag("Robot"))
-                tileStart = XYToTile(trip.from.GetComponent<Renderer>().bounds.center.x
-                    , trip.from.GetComponent<Renderer>().bounds.center.y);
+            if (trip.fromLinkedTransform.CompareTag("Shelf"))
+                tileStart = GetShelfTile(trip.fromLinkedTransform);
+            else if (trip.fromLinkedTransform.CompareTag("ZoneLoad") || trip.fromLinkedTransform.CompareTag("ZoneUnload")
+                || trip.fromLinkedTransform.CompareTag("Robot"))
+                tileStart = XYToTile(trip.fromLinkedTransform.GetComponent<Renderer>().bounds.center.x
+                    , trip.fromLinkedTransform.GetComponent<Renderer>().bounds.center.y);
 
             // to
-            if (trip.to.CompareTag("Shelf"))
-                tileEnd = GetShelfTile(trip.to);
-            else if (trip.to.CompareTag("ZoneLoad") || trip.to.CompareTag("ZoneUnload"))
-                tileEnd = XYToTile(trip.to.GetComponent<Renderer>().bounds.center.x
-                    , trip.to.GetComponent<Renderer>().bounds.center.y);
+            if (trip.toLinkedTransform.CompareTag("Shelf"))
+                tileEnd = GetShelfTile(trip.toLinkedTransform);
+            else if (trip.toLinkedTransform.CompareTag("ZoneLoad") || trip.toLinkedTransform.CompareTag("ZoneUnload"))
+                tileEnd = XYToTile(trip.toLinkedTransform.GetComponent<Renderer>().bounds.center.x
+                    , trip.toLinkedTransform.GetComponent<Renderer>().bounds.center.y);
 
             return new[] { tileStart[0], tileStart[1], tileEnd[0], tileEnd[1] };
         }
@@ -148,26 +140,26 @@ namespace Assets.Scripts
 
         #region Drawing
 
-        public void DrawObstructedTiles(GameObject tilePrefab = null)
+        public void DrawObstructedTiles(GameObject tilePrefab/* = null*/)
         {
             for (int x = 0; x < tiles.GetLength(0); x++)
                 for (int y = 0; y < tiles.GetLength(1); y++)
                     if (tiles[x, y] == 1) // check if the tile is obstructed
-                        DrawTile(x, y, tilePrefab: tilePrefab == null ? this.tilePrefab : tilePrefab);
+                        DrawTile(x, y, tilePrefab: /*tilePrefab == null ? this.tilePrefab :*/ tilePrefab);
         }
 
-        public GameObject DrawGoalTile(int tileX, int tileY, GameObject tilePrefab = null)
+        public GameObject DrawGoalTile(int tileX, int tileY, GameObject tilePrefab/* = null*/)
         {
-            return DrawTile(tileX, tileY, tileSize * 1.5f, tileSize * 1.5f, tilePrefab == null ? this.tileGoalPrefab : tilePrefab);
+            return DrawTile(tileX, tileY, /*tilePrefab == null ? this.tileGoalPrefab :*/ tilePrefab, tileSize * 1.5f, tileSize * 1.5f);
         }
 
-        public GameObject DrawTile(int tileX, int tileY, float sizeX = 0, float sizeY = 0, GameObject tilePrefab = null)
+        public GameObject DrawTile(int tileX, int tileY, GameObject tilePrefab/* = null*/, float sizeX = 0, float sizeY = 0)
         {
             // Calculate the position of the tile
             float[] pos = TileToXY(tileX, tileY);
 
             // Create the tile game object
-            GameObject tileObj = GameObject.Instantiate(tilePrefab == null ? this.tilePrefab : tilePrefab
+            GameObject tileObj = GameObject.Instantiate(/*tilePrefab == null ? this.tilePrefab :*/ tilePrefab
                 , new Vector3(pos[0], pos[1], 0f), Quaternion.identity);
             //tileObj.transform.localScale = new Vector3(tileSize, tileSize, 1f);
             tileObj.GetComponent<SpriteRenderer>().size = new Vector2(sizeX == 0 ? tileSize : sizeX, sizeY == 0 ? tileSize : sizeY);

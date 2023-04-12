@@ -16,10 +16,12 @@ public class ShelfGenerator : MonoBehaviour
         float shelfHeight = ShelfPrefab.GetComponent<SpriteRenderer>().bounds.size.y;
 
         float floorWidth = FloorPrefab.GetComponent<SpriteRenderer>().bounds.size.x;
-        float floorHeight = FloorPrefab.GetComponent<SpriteRenderer>().bounds.size.y;
+        float floorHeight = FloorPrefab.GetComponent<SpriteRenderer>().bounds.size.y - (2 * WallGenerator.wallThickness);
 
-        float spacingX = (floorWidth - (ShelvesHorizontal * shelfWidth)) / (ShelvesHorizontal - 1 != 0 ? ShelvesHorizontal - 1 : 2);
-        float spacingY = (floorHeight - (ShelvesVertical * shelfHeight)) / (ShelvesVertical - 1 != 0 ? ShelvesVertical - 1 : 2);
+        float spacingX = (floorWidth - (ShelvesHorizontal * shelfWidth)) 
+            / (ShelvesHorizontal - 1 != 0 ? ShelvesHorizontal - 1 : 2);
+        float spacingY = (floorHeight - (ShelvesVertical * shelfHeight)) 
+            / (ShelvesVertical - 1 != 0 ? ShelvesVertical - 1 : 2);
 
         float startX = FloorPrefab.transform.position.x - (floorWidth / 2f) + (shelfWidth / 2f);
         float startY = FloorPrefab.transform.position.y - (floorHeight / 2f) + (shelfHeight / 2f);

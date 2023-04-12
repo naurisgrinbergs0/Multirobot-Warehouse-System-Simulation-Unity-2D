@@ -1,29 +1,23 @@
 using Assets.Scripts;
+using Assets.Scripts.Map;
+using Assets.Scripts.Path_Planning;
+using Assets.Scripts.Robot;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class ImprovedAStar
+public class ImprovedAStar : PathfindingAlgorithm
 {
-    public TileMap map;
-    private List<Transform> walls;
-    private List<Transform> shelves;
-
-    public ImprovedAStar(Transform[] shelves, Transform[] walls, Transform floor, float tileSize
-        , GameObject tilePrefab, GameObject tileGoalPrefab)
+    public ImprovedAStar(TileMap map) : base(map)
     {
-        this.walls = walls.ToList();
-        this.shelves = shelves.ToList();
-        map = new TileMap(floor, shelves, walls, tileSize, tilePrefab, tileGoalPrefab);
     }
-
 
 
     public class Node
     {
-        public int x;
-        public int y;
+        public int xTile;
+        public int yTile;
         public float f;
         public float g;
         public float h;
@@ -31,38 +25,21 @@ public class ImprovedAStar
 
         public Node(int x, int y)
         {
-            this.x = x;
-            this.y = y;
-        }
-    }
-
-    public class Robot
-    {
-        public GameObject robotGameObject;
-        public List<Trip> trips;
-        public PathRenderer pathRenderer;
-
-        public Robot(GameObject robot, List<Trip> trips)
-        {
-            this.robotGameObject = robot;
-            this.trips = trips;
+            this.xTile = x;
+            this.yTile = y;
         }
     }
 
 
     private List<Node> FindPath(int startX, int startY, int goalX, int goalY)
     {
-        int width = map.tiles.GetLength(0);
-        int height = map.tiles.GetLength(1);
+        int width = ((TileMap)map).tiles.GetLength(0);
+        int height = ((TileMap)map).tiles.GetLength(1);
 
         Node[,] nodes = new Node[width, height];
         for (int x = 0; x < width; x++)
-        {
             for (int y = 0; y < height; y++)
-            {
                 nodes[x, y] = new Node(x, y);
-            }
-        }
 
         List<Node> openList = new List<Node>();
         HashSet<Node> closedSet = new HashSet<Node>();
@@ -76,27 +53,19 @@ public class ImprovedAStar
         {
             Node current = openList[0];
             for (int i = 1; i < openList.Count; i++)
-            {
                 if (openList[i].f < current.f || openList[i].f == current.f && openList[i].h < current.h)
-                {
                     current = openList[i];
-                }
-            }
 
             openList.Remove(current);
             closedSet.Add(current);
 
             if (current == goalNode)
-            {
                 return GetPath(goalNode);
-            }
 
-            foreach (Node neighbor in GetNeighbors(current, nodes, width, height, map.tiles))
+            foreach (Node neighbor in GetNeighbors(current, nodes, width, height, ((TileMap)map).tiles))
             {
                 if (closedSet.Contains(neighbor))
-                {
                     continue;
-                }
 
                 float tentativeGCost = current.g + GetDistance(current, neighbor);
                 float r = GetDistance(neighbor, goalNode);
@@ -110,19 +79,13 @@ public class ImprovedAStar
                     neighbor.parent = current;
 
                     if (!openList.Contains(neighbor))
-                    {
                         openList.Add(neighbor);
-                    }
                 }
             }
         }
 
         return null;
     }
-
-
-
-
 
 
 
@@ -145,24 +108,18 @@ public class ImprovedAStar
     {
         List<Node> neighbors = new List<Node>();
 
-        for (int x = node.x - 1; x <= node.x + 1; x++)
+        for (int x = node.xTile - 1; x <= node.xTile + 1; x++)
         {
-            for (int y = node.y - 1; y <= node.y + 1; y++)
+            for (int y = node.yTile - 1; y <= node.yTile + 1; y++)
             {
-                if (x == node.x && y == node.y)
-                {
+                if (x == node.xTile && y == node.yTile)
                     continue;
-                }
 
                 if (x < 0 || x >= width || y < 0 || y >= height)
-                {
                     continue;
-                }
 
                 if (map[x, y] == 1) // obstructed tile
-                {
                     continue;
-                }
 
                 Node neighbor = nodes[x, y];
                 neighbors.Add(neighbor);
@@ -174,26 +131,28 @@ public class ImprovedAStar
 
     private static float GetDistance(Node a, Node b)
     {
-        int dx = Mathf.Abs(a.x - b.x);
-        int dy = Mathf.Abs(a.y - b.y);
+        int dx = Mathf.Abs(a.xTile - b.xTile);
+        int dy = Mathf.Abs(a.yTile - b.yTile);
         return Mathf.Sqrt(dx * dx + dy * dy);
     }
 
 
 
-    public void StartTravelling(List<Robot> robots, Entry coroutineProvider)
+    public override void FindPaths(List<RobotBase> robots)
     {
-        coroutineProvider.StartCoroutine(MoveRobots(robots, 4, coroutineProvider));
+        base.FindPaths(robots);
+
+        coroutineProvider.StartCoroutine(MoveRobots(robots.Select(r => (RobotImprovedAStar) r).ToList()));
     }
 
 
-    private IEnumerator MoveRobots(List<Robot> robots, float moveSpeed, Entry coroutineProvider)
+    private IEnumerator MoveRobots(List<RobotImprovedAStar> robots)
     {
         // Create a coroutine for each robot
         List<IEnumerator> coroutines = new List<IEnumerator>();
-        foreach (Robot robot in robots)
+        foreach (RobotImprovedAStar robot in robots)
         {
-            IEnumerator coroutine = MoveRobot(robot, robots, coroutineProvider.pathPrefab);
+            IEnumerator coroutine = MoveRobot(robot, robots);
             coroutines.Add(coroutine);
             coroutineProvider.StartCoroutine(coroutine);
         }
@@ -207,7 +166,7 @@ public class ImprovedAStar
             finished = true;
 
             // Check if any robot still has an unfinished path
-            foreach (Robot robot in robots)
+            foreach (RobotImprovedAStar robot in robots)
             {
                 if (robot.trips.Count > 0)
                 {
@@ -220,128 +179,89 @@ public class ImprovedAStar
         }
     }
 
-    private IEnumerator MoveRobot(Robot robot, List<Robot> robots, GameObject pathPrefab)
+    private IEnumerator MoveRobot(RobotImprovedAStar robot, List<RobotImprovedAStar> robots)
     {
         // Loop through each trip in the list
-        while (robot.trips.Count > 0)
+        while (robot.tripIndex < robot.trips.Count)
         {
-            Trip trip = robot.trips.First();
+            Trip trip = robot.trips[robot.tripIndex];
 
-            int[] tileStart = null; int[] tileEnd = null;
-            // from
-            if (trip.from.CompareTag("Shelf"))
-                tileStart = map.GetShelfTile(trip.from);
-            else if (trip.from.CompareTag("ZoneLoad") || trip.from.CompareTag("ZoneUnload")
-                || trip.from.CompareTag("Robot"))
-                tileStart = map.XYToTile(trip.from.GetComponent<Renderer>().bounds.center.x
-                    , trip.from.GetComponent<Renderer>().bounds.center.y);
+            int[] tripTiles = ((TileMap)map).GetTripTiles(trip);
 
-            // to
-            if (trip.to.CompareTag("Shelf"))
-                tileEnd = map.GetShelfTile(trip.to);
-            else if (trip.to.CompareTag("ZoneLoad") || trip.to.CompareTag("ZoneUnload"))
-                tileEnd = map.XYToTile(trip.to.GetComponent<Renderer>().bounds.center.x
-                    , trip.to.GetComponent<Renderer>().bounds.center.y);
-
-            List<Node> path = FindPath(tileStart[0], tileStart[1], tileEnd[0], tileEnd[1]);
+            List<Node> path = FindPath(tripTiles[0], tripTiles[1], tripTiles[2], tripTiles[3]);
 
             // set up initial EDWA params
-            //EDWA edwa = new EDWA(1, 0.3f, 1, 0.2f, 1f);
-            EDWA edwa = new EDWA(1, 1f, 2, 0.1f, 1f);
-
-
-
+            EDWA edwa = new EDWA(2, 2f,  1, 0.1f,  1f);
 
             // draw path
-            GameObject pathInstance = GameObject.Instantiate(pathPrefab);
-            PathRenderer pr = pathInstance.GetComponent<PathRenderer>();
-            pr.DrawPath(path, map);
+            map.DrawPath(path.Select((Node n) => {
+                float[] xy = ((TileMap)map).TileToXY(n.xTile, n.yTile);
+                return new Vector2(xy[0], xy[1]);
+            }).ToList(), robot); // problema
 
             Vector2 currentVelocity = new Vector2();
 
             // Set the look-ahead distance
-            float lookAheadDistance = 1.0f;
+            float lookAheadDistance = 1f;
 
             // Loop through each node in the path
             for (int i = 0; i < path.Count; i++)
             {
-                // Get the position of the current node
-                //float[] pos = map.TileToXY(path[i].x, path[i].y);
-                //Vector2 targetPosition = new Vector2(pos[0], pos[1]);
-
                 int lookAheadIndex = i;
-                Vector2 currPos = new Vector2(robot.robotGameObject.transform.position.x, robot.robotGameObject.transform.position.y);
+                Vector2 currPos = new Vector2(robot.position.x, robot.position.y);
 
                 while (lookAheadIndex + 1 < path.Count)
                 {
-                    float[] lookAheadPos = map.TileToXY(path[lookAheadIndex + 1].x, path[lookAheadIndex + 1].y);
+                    float[] lookAheadPos = ((TileMap)map).TileToXY(path[lookAheadIndex + 1].xTile, path[lookAheadIndex + 1].yTile);
                     Vector2 nextLookAheadPosition = new Vector2(lookAheadPos[0], lookAheadPos[1]);
                     if (Vector2.Distance(currPos, nextLookAheadPosition) < lookAheadDistance)
-                    {
                         lookAheadIndex++;
-                    }
                     else
-                    {
                         break;
-                    }
                 }
 
                 // Update target position to the new lookahead point
-                float[] pos = map.TileToXY(path[lookAheadIndex].x, path[lookAheadIndex].y);
+                float[] pos = ((TileMap)map).TileToXY(path[lookAheadIndex].xTile, path[lookAheadIndex].yTile);
                 Vector2 targetPosition = new Vector2(pos[0], pos[1]);
 
-
-
-
-
-                var gtt = map.XYToTile(targetPosition.x, targetPosition.y);
-                GameObject gt = map.DrawGoalTile(gtt[0], gtt[1]);
-
+                int cntr = 0;
                 // Move the robot towards the target position
-                while (Vector2.Distance(robot.robotGameObject.transform.position, targetPosition) > 0.02f)
-                {
-                    Vector2 currentPosition = new Vector2(robot.robotGameObject.transform.position.x
-                        , robot.robotGameObject.transform.position.y);
+                while (Vector2.Distance(robot.position, targetPosition) > 0.02f)
+                {                    
+                    Vector2 currentPosition = new Vector2(robot.position.x, robot.position.y);
                     float currentOrientation = GetAngle(robot);
 
                     currentVelocity = edwa.GetVelocityCommand(currentPosition, currentOrientation
-                        , currentVelocity, targetPosition, walls.Union(shelves).Union(robots.Select(r => r.robotGameObject.transform)).ToList());
+                        , currentVelocity, targetPosition, ((TileMap)map).walls.Union(((TileMap)map).shelves)
+                        .Union(robots.Select(r => r.robotTransform)).ToList());
 
-                    robot.robotGameObject.transform.position += (Vector3)(currentVelocity * Time.deltaTime);
+                    robot.position += currentVelocity * 0.008f;
                     float rotationAngle = Mathf.Atan2(currentVelocity.y, currentVelocity.x) * Mathf.Rad2Deg;
-                    robot.robotGameObject.transform.rotation = Quaternion.Euler(0, 0, rotationAngle);
+                    robot.angle = rotationAngle;
+
+                    cntr++;
+                    if(cntr > 10)
+                    {
+                        map.DrawRobot(robot, trip.isCargoTrip);
+                        cntr = 0;
+                    }
 
                     yield return null;
                 }
 
-                GameObject.DestroyImmediate(gt);
-
                 // Pause for a short time at each node in the path
-                yield return null;// return new WaitForSeconds(0.1f);
+                yield return null;
             }
 
-
-            robot.trips.RemoveAt(0);
-            GameObject.DestroyImmediate(pathInstance);
+            robot.tripIndex++;
         }
     }
 
-
-    private float GetAngle(Robot robot)
+    private float GetAngle(RobotImprovedAStar robot)
     {
-        // Get the forward direction of the robot
-        Vector2 forwardDirection = robot.robotGameObject.transform.up; // Assuming the robot's forward direction is aligned with its up axis
-
-        // Calculate the angle between the forward direction and the positive X-axis in degrees
-        float angleDegrees = Vector2.Angle(Vector2.right, forwardDirection);
-
-        // Check if the angle should be negative (clockwise) based on the orientation of the robot
-        if (Vector3.Cross(forwardDirection, Vector2.right).z < 0)
-        {
-            angleDegrees = -angleDegrees;
-        }
-
         // Convert the angle to radians
-        return angleDegrees * Mathf.Deg2Rad;
+        float angleRadians = robot.angle * Mathf.Deg2Rad;
+
+        return angleRadians;
     }
 }
