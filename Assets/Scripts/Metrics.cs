@@ -14,7 +14,7 @@ namespace Assets.Scripts
     {
         public enum Measurement
         {
-            Efficiency, MemoryUsage, AverageOptimality, AverageSmoothness, None
+            ExecutionTime, MemoryUsage, AverageOptimality, AverageSmoothness, None
         }
 
         public Metrics(PathfindingAlgorithm algorithm)
@@ -33,10 +33,10 @@ namespace Assets.Scripts
         #region Measurements
 
         private Stopwatch stopwatch;
-        private double? efficiency = null;
-        public double? GetEfficiency()
+        private double? executionTime = null;
+        public double? GetExecutionTime()
         {
-            return efficiency;
+            return executionTime;
         }
 
         private long? memory = null;
@@ -70,8 +70,8 @@ namespace Assets.Scripts
             switch (measurement)
             {
                 default:
-                case Measurement.Efficiency:
-                    StartEficiencyCalculation();
+                case Measurement.ExecutionTime:
+                    StartExecutionTimeCalculation();
                     break;
                 case Measurement.MemoryUsage:
                     StartMemoryUsageCalculation();
@@ -87,8 +87,8 @@ namespace Assets.Scripts
             switch (measurement)
             {
                 default:
-                case Measurement.Efficiency:
-                    StopEfficiencyCalculation();
+                case Measurement.ExecutionTime:
+                    StopExecutionTimeCalculation();
                     break;
                 case Measurement.MemoryUsage:
                     StopMemoryUsageCalculation();
@@ -117,7 +117,7 @@ namespace Assets.Scripts
             memory = Profiler.GetTotalAllocatedMemoryLong() - memoryStart;
         }
 
-        private void StartEficiencyCalculation()
+        private void StartExecutionTimeCalculation()
         {
             stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -125,10 +125,10 @@ namespace Assets.Scripts
             // Run the path planning algorithm
             algorithm.FindPaths(robots);
         }
-        public void StopEfficiencyCalculation()
+        public void StopExecutionTimeCalculation()
         {
             stopwatch.Stop();
-            efficiency = stopwatch.Elapsed.TotalSeconds;
+            executionTime = stopwatch.Elapsed.TotalSeconds;
         }
 
         private void StartAverageOptimalityCalculation()

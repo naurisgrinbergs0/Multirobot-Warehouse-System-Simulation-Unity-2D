@@ -16,6 +16,7 @@ namespace Assets.Scripts.Map
         public GameObject robotCargoPrefab;
 
         public bool drawGraphics = true;
+        public int delayMilliseconds = 50;
 
         public MapBase(Transform floor, Transform[] shelves, Transform[] walls)
         {
@@ -53,7 +54,6 @@ namespace Assets.Scripts.Map
         {
             if (drawGraphics)
             {
-                Thread.Sleep(50);
                 robot.robotTransform.position = robot.position;
                 Color c = new Color(robot.color.r, robot.color.g, robot.color.b, 0.6f);
                 robot.robotTransform.gameObject.GetComponent<SpriteRenderer>().color = c;
@@ -71,6 +71,12 @@ namespace Assets.Scripts.Map
                         robot.robotCargoGameObject.SetActive(false);
                 }
             }
+        }
+
+        public void DrawDelay(int? delayMilliseconds = null)
+        {
+            if(drawGraphics)
+                Thread.Sleep(delayMilliseconds == null ? this.delayMilliseconds : (int)delayMilliseconds);
         }
     }
 }

@@ -111,6 +111,7 @@ namespace Assets.Scripts.Path_Planning
                     paths.Where(p => p.Item1 == robot).First().Item2.Add(robot.position);
                     map.DrawPath(paths.Where(p => p.Item1 == robot).First().Item2, robot); //problema
                 }
+                map.DrawDelay();
                 yield return null;
             }
             yield return null;

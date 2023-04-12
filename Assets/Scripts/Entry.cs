@@ -20,6 +20,7 @@ public class Entry : MonoBehaviour
     public PathFindingAlgorithmEnum pathFindingAlgorithmEnum = PathFindingAlgorithmEnum.RERAPF;
     public SimulationMode simulationMode = SimulationMode.Graphics;
     public int numberOfTrips = 1;
+    public int delayBetweenStepsInMillis = 50;
 
     public Transform floorGameTransform;
     public Transform shelfFloorTransform;
@@ -64,6 +65,7 @@ public class Entry : MonoBehaviour
         map.robotPrefab = robotPrefab;
         map.robotPathPrefab = robotPathPrefab;
         map.robotCargoPrefab = robotCargoPrefab;
+        map.delayMilliseconds = delayBetweenStepsInMillis;
         map.drawGraphics = simulationMode == SimulationMode.Graphics || simulationMode == SimulationMode.MetricsAndGraphics;
 
 
@@ -176,15 +178,15 @@ public class Entry : MonoBehaviour
         metrics.StopCalculation();
         // store value
         Debug.Log($"Mem: {metrics.GetMemoryUsage()}");
-        metrics.measurement = Metrics.Measurement.Efficiency;
-        metrics.callback = SaveEfficiency;
+        metrics.measurement = Metrics.Measurement.ExecutionTime;
+        metrics.callback = SaveExecutionTime;
     }
 
-    private void SaveEfficiency()
+    private void SaveExecutionTime()
     {
         metrics.StopCalculation();
         // store value
-        Debug.Log($"Eff: {metrics.GetEfficiency()}");
+        Debug.Log($"Eff: {metrics.GetExecutionTime()}");
         metrics.measurement = Metrics.Measurement.AverageSmoothness;
         metrics.callback = SaveAverageSmoothness;
     }
@@ -202,7 +204,7 @@ public class Entry : MonoBehaviour
     {
         csvExporter.AddRecord(new string[] {
             System.Enum.GetName(typeof(PathFindingAlgorithmEnum), pathFindingAlgorithmEnum), robots.Count.ToString()
-            , metrics.GetEfficiency().ToString(), metrics.GetMemoryUsage().ToString()
+            , metrics.GetExecutionTime().ToString(), metrics.GetMemoryUsage().ToString()
             ,  metrics.GetAverageOptimality().ToString(), metrics.GetAverageSmoothness().ToString()
         });
     }
