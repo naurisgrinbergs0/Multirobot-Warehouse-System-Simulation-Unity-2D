@@ -2,6 +2,7 @@ using Assets.Scripts;
 using Assets.Scripts.Map;
 using Assets.Scripts.Path_Planning;
 using Assets.Scripts.Robot;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -138,123 +139,94 @@ public class ImprovedAStar : PathfindingAlgorithm
 
 
 
-    public override void FindPaths(List<RobotBase> robots)
+    public override void FindPaths(List<RobotBase> robots, Action callback = null)
     {
         base.FindPaths(robots);
 
-        coroutineProvider.StartCoroutine(MoveRobots(robots.Select(r => (RobotImprovedAStar) r).ToList()));
+        coroutineProvider.StartCoroutine(MoveRobots(robots.Select(r => (RobotImprovedAStar) r).ToList(), callback));
     }
 
 
-    private IEnumerator MoveRobots(List<RobotImprovedAStar> robots)
+    private IEnumerator MoveRobots(List<RobotImprovedAStar> robots, Action callback)
     {
-        // Create a coroutine for each robot
-        List<IEnumerator> coroutines = new List<IEnumerator>();
-        foreach (RobotImprovedAStar robot in robots)
+        // loop while any unfinished trips left to any robot
+        while (robots.Where(r => r.tripIndex < r.trips.Count).Count() > 0)
         {
-            IEnumerator coroutine = MoveRobot(robot, robots);
-            coroutines.Add(coroutine);
-            coroutineProvider.StartCoroutine(coroutine);
-        }
-
-        // Wait for all coroutines to finish
-        yield return new WaitForSeconds(0.1f);
-
-        bool finished = false;
-        while (!finished)
-        {
-            finished = true;
-
-            // Check if any robot still has an unfinished path
-            foreach (RobotImprovedAStar robot in robots)
+            // go through each robot that has not finished the trip
+            foreach (RobotImprovedAStar robot in robots.Where(r => r.tripIndex < r.trips.Count))
             {
-                if (robot.trips.Count > 0)
+                Trip trip = robot.trips[robot.tripIndex];
+
+                int[] tripTiles = ((TileMap)map).GetTripTiles(trip);
+
+                List<Node> path = FindPath(tripTiles[0], tripTiles[1], tripTiles[2], tripTiles[3]);
+
+                // set up initial EDWA params
+                EDWA edwa = new EDWA(2, 2f, 1, 0.1f, 1f);
+
+                // draw path
+                map.DrawPath(path.Select((Node n) => {
+                    float[] xy = ((TileMap)map).TileToXY(n.xTile, n.yTile);
+                    return new Vector2(xy[0], xy[1]);
+                }).ToList(), robot); // problema
+
+                Vector2 currentVelocity = new Vector2();
+
+                // Set the look-ahead distance
+                float lookAheadDistance = 1f;
+
+                // Loop through each node in the path
+                for (int i = 0; i < path.Count; i++)
                 {
-                    finished = false;
-                    break;
-                }
-            }
+                    int lookAheadIndex = i;
+                    Vector2 currPos = new Vector2(robot.position.x, robot.position.y);
 
-            yield return null;
-        }
-    }
-
-    private IEnumerator MoveRobot(RobotImprovedAStar robot, List<RobotImprovedAStar> robots)
-    {
-        // Loop through each trip in the list
-        while (robot.tripIndex < robot.trips.Count)
-        {
-            Trip trip = robot.trips[robot.tripIndex];
-
-            int[] tripTiles = ((TileMap)map).GetTripTiles(trip);
-
-            List<Node> path = FindPath(tripTiles[0], tripTiles[1], tripTiles[2], tripTiles[3]);
-
-            // set up initial EDWA params
-            EDWA edwa = new EDWA(2, 2f,  1, 0.1f,  1f);
-
-            // draw path
-            map.DrawPath(path.Select((Node n) => {
-                float[] xy = ((TileMap)map).TileToXY(n.xTile, n.yTile);
-                return new Vector2(xy[0], xy[1]);
-            }).ToList(), robot); // problema
-
-            Vector2 currentVelocity = new Vector2();
-
-            // Set the look-ahead distance
-            float lookAheadDistance = 1f;
-
-            // Loop through each node in the path
-            for (int i = 0; i < path.Count; i++)
-            {
-                int lookAheadIndex = i;
-                Vector2 currPos = new Vector2(robot.position.x, robot.position.y);
-
-                while (lookAheadIndex + 1 < path.Count)
-                {
-                    float[] lookAheadPos = ((TileMap)map).TileToXY(path[lookAheadIndex + 1].xTile, path[lookAheadIndex + 1].yTile);
-                    Vector2 nextLookAheadPosition = new Vector2(lookAheadPos[0], lookAheadPos[1]);
-                    if (Vector2.Distance(currPos, nextLookAheadPosition) < lookAheadDistance)
-                        lookAheadIndex++;
-                    else
-                        break;
-                }
-
-                // Update target position to the new lookahead point
-                float[] pos = ((TileMap)map).TileToXY(path[lookAheadIndex].xTile, path[lookAheadIndex].yTile);
-                Vector2 targetPosition = new Vector2(pos[0], pos[1]);
-
-                int cntr = 0;
-                // Move the robot towards the target position
-                while (Vector2.Distance(robot.position, targetPosition) > 0.02f)
-                {                    
-                    Vector2 currentPosition = new Vector2(robot.position.x, robot.position.y);
-                    float currentOrientation = GetAngle(robot);
-
-                    currentVelocity = edwa.GetVelocityCommand(currentPosition, currentOrientation
-                        , currentVelocity, targetPosition, ((TileMap)map).walls.Union(((TileMap)map).shelves)
-                        .Union(robots.Select(r => r.robotTransform)).ToList());
-
-                    robot.position += currentVelocity * 0.008f;
-                    float rotationAngle = Mathf.Atan2(currentVelocity.y, currentVelocity.x) * Mathf.Rad2Deg;
-                    robot.angle = rotationAngle;
-
-                    cntr++;
-                    if(cntr > 10)
+                    while (lookAheadIndex + 1 < path.Count)
                     {
-                        map.DrawRobot(robot, trip.isCargoTrip);
-                        cntr = 0;
+                        float[] lookAheadPos = ((TileMap)map).TileToXY(path[lookAheadIndex + 1].xTile, path[lookAheadIndex + 1].yTile);
+                        Vector2 nextLookAheadPosition = new Vector2(lookAheadPos[0], lookAheadPos[1]);
+                        if (Vector2.Distance(currPos, nextLookAheadPosition) < lookAheadDistance)
+                            lookAheadIndex++;
+                        else
+                            break;
                     }
 
-                    yield return null;
+                    // Update target position to the new lookahead point
+                    float[] pos = ((TileMap)map).TileToXY(path[lookAheadIndex].xTile, path[lookAheadIndex].yTile);
+                    Vector2 targetPosition = new Vector2(pos[0], pos[1]);
+
+                    int cntr = 0;
+                    // Move the robot towards the target position
+                    while (Vector2.Distance(robot.position, targetPosition) > 0.02f)
+                    {
+                        Vector2 currentPosition = new Vector2(robot.position.x, robot.position.y);
+                        float currentOrientation = GetAngle(robot);
+
+                        currentVelocity = edwa.GetVelocityCommand(currentPosition, currentOrientation
+                            , currentVelocity, targetPosition, ((TileMap)map).walls.Union(((TileMap)map).shelves)
+                            .Union(robots.Select(r => r.robotTransform)).ToList());
+
+                        robot.position += currentVelocity * 0.008f;
+                        float rotationAngle = Mathf.Atan2(currentVelocity.y, currentVelocity.x) * Mathf.Rad2Deg;
+                        robot.angle = rotationAngle;
+
+                        cntr++;
+                        if (cntr > 10)
+                        {
+                            map.DrawRobot(robot, trip.isCargoTrip);
+                            cntr = 0;
+                        }
+
+                        yield return null;
+                    }
                 }
-
-                // Pause for a short time at each node in the path
-                yield return null;
+                robot.tripIndex++;
             }
-
-            robot.tripIndex++;
+            map.DrawDelay();
+            yield return null;
         }
+        if (callback != null)
+            callback.Invoke();
     }
 
     private float GetAngle(RobotImprovedAStar robot)

@@ -5,7 +5,7 @@ public class WallGenerator : MonoBehaviour
 {
     public GameObject WallPrefab;
     public GameObject FloorPrefab;
-    public static float wallThickness = 0.5f;
+    public static float WALL_THICKNESS = 0.5f;
 
     public GameObject[] GenerateWalls()
     {
@@ -17,10 +17,10 @@ public class WallGenerator : MonoBehaviour
         float floorCenterY = FloorPrefab.GetComponent<SpriteRenderer>().bounds.center.y;
 
         List<float[]> positionAndScaleList = new List<float[]>() { 
-            new float[]{ floorCenterX, floorCenterY + floorHeight / 2f - wallThickness / 2f, floorWidth, wallThickness } // top
-            , new float[]{ floorCenterX, floorCenterY - floorHeight / 2f + wallThickness / 2f, floorWidth, wallThickness } // bottom
-            , new float[]{ floorCenterX - floorWidth / 2f + wallThickness / 2f, floorCenterY, wallThickness, floorHeight } // left
-            , new float[]{ floorCenterX + floorWidth / 2f - wallThickness / 2f, floorCenterY, wallThickness, floorHeight } // right
+            new float[]{ floorCenterX, floorCenterY + floorHeight / 2f - WALL_THICKNESS / 2f, floorWidth, WALL_THICKNESS } // top
+            , new float[]{ floorCenterX, floorCenterY - floorHeight / 2f + WALL_THICKNESS / 2f, floorWidth, WALL_THICKNESS } // bottom
+            , new float[]{ floorCenterX - floorWidth / 2f + WALL_THICKNESS / 2f, floorCenterY, WALL_THICKNESS, floorHeight } // left
+            , new float[]{ floorCenterX + floorWidth / 2f - WALL_THICKNESS / 2f, floorCenterY, WALL_THICKNESS, floorHeight } // right
         };
 
         int index = 0;

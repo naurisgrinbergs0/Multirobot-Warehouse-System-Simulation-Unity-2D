@@ -4,9 +4,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Assets.Scripts.Path_Planning
@@ -17,7 +14,9 @@ namespace Assets.Scripts.Path_Planning
         private const float OBSTACLE_REPULSION_FACTOR = 5f;
         private const float GOAL_ATTRACTION_FACTOR = 5f;
 
-        private const float EXCITATION_FACTOR = 1.1f;
+        private const float EXCITATION_FACTOR = 5f;
+        //private const float EXCITATION_FACTOR = 1.1f;
+        //private const float RELAXATION_FACTOR = 0.1f;
         private const float RELAXATION_FACTOR = 0.1f;
 
         private const float OBSTACLE_INFLUENCE_RADIUS = 2f;
@@ -28,7 +27,7 @@ namespace Assets.Scripts.Path_Planning
         }
 
 
-        public override void FindPaths(List<RobotBase> robots)
+        public override void FindPaths(List<RobotBase> robots, Action callback = null)
         {
             base.FindPaths(robots);
             foreach (RobotBase rb in robots)
@@ -41,82 +40,58 @@ namespace Assets.Scripts.Path_Planning
             }
 
             paths.AddRange(robots.Select(r => new Tuple<RobotBase, List<Vector2>>(r, new List<Vector2>())));
-            coroutineProvider.StartCoroutine(MoveRobots(robots.Select(r => (RobotRERAPF)r).ToList()));
+            coroutineProvider.StartCoroutine(MoveRobots(robots.Select(r => (RobotRERAPF)r).ToList(), callback));
         }
 
 
-        private IEnumerator MoveRobots(List<RobotRERAPF> robots)
+        private IEnumerator MoveRobots(List<RobotRERAPF> robots, Action callback)
         {
-            // Create a coroutine for each robot
-            List<IEnumerator> coroutines = new List<IEnumerator>();
-            foreach (RobotRERAPF robot in robots)
+            // loop while any unfinished trips left to any robot
+            while (robots.Where(r => r.tripIndex < r.trips.Count).Count() > 0)
             {
-                IEnumerator coroutine = MoveRobot(robot, robots);
-                coroutines.Add(coroutine);
-                coroutineProvider.StartCoroutine(coroutine);
-            }
-
-            bool finished = false;
-            while (!finished)
-            {
-                finished = true;
-
-                // Check if any robot still has an unfinished path
-                foreach (RobotRERAPF robot in robots)
+                // go through each robot that has not finished the trip
+                foreach (RobotRERAPF robot in robots.Where(r => r.tripIndex < r.trips.Count))
                 {
-                    if (robot.tripIndex < robot.trips.Count)
+                    Trip trip = robot.trips[robot.tripIndex];
+                    // if goal is not reached
+                    int[] tripTiles = ((TileMap)map).GetTripTiles(trip);
+                    if (robot.currentTile[0] != tripTiles[2] || robot.currentTile[1] != tripTiles[3])
                     {
-                        finished = false;
-                        break;
+                        // artificial potential field pathfinding
+                        int[] nextTile = FindNextTile(robot, tripTiles, robots);
+
+                        if (nextTile == null)
+                            break;
+
+                        robot.currentTile = nextTile;
+
+                        float[] pos = ((TileMap)map).TileToXY(nextTile[0], nextTile[1]);
+
+                        // Move the robot to the target position
+                        robot.position = new Vector2(pos[0], pos[1]);
+
+                        //if (robots.Where(r => Mathf.Abs(r.currentTile[0] - robot.currentTile[0]) < 2 && Mathf.Abs(r.currentTile[1] == robot.currentTile[1]) < 2).Count() > 0)
+                        //{
+
+                        //}
+
+                        // if goal reached - remove trip & delete visited tiles
+                        if (nextTile[0] == tripTiles[2] && nextTile[1] == tripTiles[3])
+                        {
+                            robot.tripIndex++;
+                            robot.exploredTiles.Clear();
+                        }
+                        map.DrawRobot(robot, trip.isCargoTrip);
+                        paths.Where(p => p.Item1 == robot).First().Item2.Add(robot.position);
+                        map.DrawPath(paths.Where(p => p.Item1 == robot).First().Item2, robot); //problema
                     }
-                }
-
-                yield return null;
-            }
-            if(metrics?.callback != null)
-                metrics.callback.Invoke();
-        }
-
-
-        public IEnumerator MoveRobot(RobotRERAPF robot, List<RobotRERAPF> robots)
-        {
-            // loop until robot has reached the goal
-            while (robot.tripIndex < robot.trips.Count)
-            {
-                Trip trip = robot.trips[robot.tripIndex];
-                // if goal is not reached
-                int[] tripTiles = ((TileMap)map).GetTripTiles(trip);
-                if (robot.currentTile[0] != tripTiles[2] || robot.currentTile[1] != tripTiles[3])
-                {
-                    // artificial potential field pathfinding
-                    int[] nextTile = FindNextTile(robot, tripTiles, robots);
-
-                    if (nextTile == null)
-                        break;
-
-                    robot.currentTile = nextTile;
-
-                    float[] pos = ((TileMap)map).TileToXY(nextTile[0], nextTile[1]);
-
-                    // Move the robot to the target position
-                    robot.position = new Vector2(pos[0], pos[1]);
-
-                    // if goal reached - remove trip & delete visited tiles
-                    if (nextTile[0] == tripTiles[2] && nextTile[1] == tripTiles[3])
-                    {
-                        robot.tripIndex++;
-                        robot.exploredTiles.Clear();
-                    }
-                    map.DrawRobot(robot, trip.isCargoTrip);
-                    paths.Where(p => p.Item1 == robot).First().Item2.Add(robot.position);
-                    map.DrawPath(paths.Where(p => p.Item1 == robot).First().Item2, robot); //problema
                 }
                 map.DrawDelay();
                 yield return null;
             }
-            yield return null;
+            if (callback != null)
+                callback.Invoke();
         }
-
 
 
 
@@ -259,19 +234,19 @@ namespace Assets.Scripts.Path_Planning
             float robotPotential = 0;
 
             // Loop through each robot in the map
-            foreach (RobotRERAPF r in robots)
-            {
-                // Calculate the distance to the robot
-                float distanceToRobot = Vector2.Distance(new Vector2(xCurr, yCurr), r.position);
+            //foreach (RobotRERAPF r in robots)
+            //{
+            //    // Calculate the distance to the robot
+            //    float distanceToRobot = Vector2.Distance(new Vector2(xCurr, yCurr), r.position);
 
-                // If the distance is within the influence radius
-                if (distanceToRobot < ROBOT_INFLUENCE_RADIUS)
-                {
-                    // Calculate the robot potential
-                    float robotInfluence = 1 - distanceToRobot / ROBOT_INFLUENCE_RADIUS;
-                    robotPotential += robotInfluence * (1 / distanceToRobot - 1 / ROBOT_INFLUENCE_RADIUS);
-                }
-            }
+            //    // If the distance is within the influence radius
+            //    if (distanceToRobot < ROBOT_INFLUENCE_RADIUS)
+            //    {
+            //        // Calculate the robot potential
+            //        float robotInfluence = 1 - distanceToRobot / ROBOT_INFLUENCE_RADIUS;
+            //        robotPotential += robotInfluence * (1 / distanceToRobot - 1 / ROBOT_INFLUENCE_RADIUS);
+            //    }
+            //}
 
             return robotPotential * ROBOT_REPULSION_FACTOR;
         }
