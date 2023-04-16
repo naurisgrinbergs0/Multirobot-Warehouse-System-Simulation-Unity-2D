@@ -24,6 +24,7 @@ public class ShelfGenerator : MonoBehaviour
         float startX = FloorPrefab.transform.position.x - (floorWidth / 2f) + (shelfWidth / 2f);
         float startY = FloorPrefab.transform.position.y - (floorHeight / 2f) + (shelfHeight / 2f);
 
+        // generate shelves
         int index = 0;
         for (int x = 0; x < shelvesHorizontal; x++)
         {

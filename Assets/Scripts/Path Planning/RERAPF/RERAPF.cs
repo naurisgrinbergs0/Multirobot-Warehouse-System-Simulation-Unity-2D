@@ -15,8 +15,6 @@ namespace Assets.Scripts.Path_Planning
         private const float GOAL_ATTRACTION_FACTOR = 5f;
 
         private const float EXCITATION_FACTOR = 5f;
-        //private const float EXCITATION_FACTOR = 1.1f;
-        //private const float RELAXATION_FACTOR = 0.1f;
         private const float RELAXATION_FACTOR = 0.1f;
 
         private const float OBSTACLE_INFLUENCE_RADIUS = 2f;
@@ -67,7 +65,7 @@ namespace Assets.Scripts.Path_Planning
 
                         float[] pos = ((TileMap)map).TileToXY(nextTile[0], nextTile[1]);
 
-                        // Move the robot to the target position
+                        // move the robot to the target position
                         robot.position = new Vector2(pos[0], pos[1]);
 
                         //if (robots.Where(r => Mathf.Abs(r.currentTile[0] - robot.currentTile[0]) < 2 && Mathf.Abs(r.currentTile[1] == robot.currentTile[1]) < 2).Count() > 0)
@@ -204,21 +202,21 @@ namespace Assets.Scripts.Path_Planning
         {
             float obstaclePotential = 0;
 
-            // Loop through each tile in the map
+            // loop through each tile in the map
             for (int i = 0; i < tiles.GetLength(0); i++)
             {
                 for (int j = 0; j < tiles.GetLength(1); j++)
                 {
-                    // If the tile is obstructed
+                    // if the tile is obstructed
                     if (tiles[i, j] == 1)
                     {
-                        // Calculate the distance to the obstacle
+                        // calculate the distance to the obstacle
                         float distanceToObstacle = Vector2.Distance(new Vector2(xCurr, yCurr), new Vector2(i, j));
 
-                        // If the distance is within the influence radius
+                        // if the distance is within the influence radius
                         if (distanceToObstacle < OBSTACLE_INFLUENCE_RADIUS)
                         {
-                            // Calculate the obstacle potential
+                            // calculate the obstacle potential
                             float obstacleInfluence = 1 - distanceToObstacle / OBSTACLE_INFLUENCE_RADIUS;
                             obstaclePotential += obstacleInfluence * (1 / distanceToObstacle - 1 / OBSTACLE_INFLUENCE_RADIUS);
                         }
@@ -233,16 +231,16 @@ namespace Assets.Scripts.Path_Planning
         {
             float robotPotential = 0;
 
-            // Loop through each robot in the map
+            // loop through each robot in the map
             //foreach (RobotRERAPF r in robots)
             //{
-            //    // Calculate the distance to the robot
+            //    // calculate the distance to the robot
             //    float distanceToRobot = Vector2.Distance(new Vector2(xCurr, yCurr), r.position);
 
-            //    // If the distance is within the influence radius
+            //    // if the distance is within the influence radius
             //    if (distanceToRobot < ROBOT_INFLUENCE_RADIUS)
             //    {
-            //        // Calculate the robot potential
+            //        // calculate the robot potential
             //        float robotInfluence = 1 - distanceToRobot / ROBOT_INFLUENCE_RADIUS;
             //        robotPotential += robotInfluence * (1 / distanceToRobot - 1 / ROBOT_INFLUENCE_RADIUS);
             //    }

@@ -21,6 +21,7 @@ public class EDWA
     public Vector2 GetVelocityCommand(Vector2 currentPosition, float currentRotation, Vector2 currentVelocity,
         Vector2 targetPosition, List<Transform> obstacles)
     {
+        // get next velocity
         float bestScore = float.NegativeInfinity;
         Vector2 bestVelocity = currentVelocity;
         Vector2 currentDirection = new Vector2(Mathf.Cos(currentRotation), Mathf.Sin(currentRotation));
@@ -61,10 +62,10 @@ public class EDWA
 
     private bool IsCollisionFree(Vector2 newVelocity, Vector2 currentPosition, List<Transform> obstacles)
     {
-        // Calculate the next position using the new velocity
+        // calculate the next position using the new velocity
         Vector2 nextPosition = currentPosition + newVelocity;
 
-        // Check for collisions with obstacles
+        // check for collisions with obstacles
         foreach (Transform obstacle in obstacles)
         {
             //if (obstacleCollider != null && robotCollider.IsTouching(obstacleCollider))
@@ -74,7 +75,7 @@ public class EDWA
             }
         }
 
-        // No collisions detected
+        // no collisions detected
         return true;
     }
 
@@ -83,15 +84,15 @@ public class EDWA
     {
         Bounds b = rectangle.gameObject.GetComponent<SpriteRenderer>().bounds;
 
-        // Find the closest point in the rectangle to the circle center
+        // find the closest point in the rectangle to the circle center
         float closestX = Mathf.Clamp(circleCenter.x, b.min.x, b.max.x);
         float closestY = Mathf.Clamp(circleCenter.y, b.min.y, b.max.y);
 
-        // Calculate the distance between the circle center and the closest point
+        // calculate the distance between the circle center and the closest point
         float deltaX = circleCenter.x - closestX;
         float deltaY = circleCenter.y - closestY;
 
-        // If the distance is less than the circle radius, the circle and rectangle intersect
+        // if the distance is less than the circle radius, the circle and rectangle intersect
         float distanceSquared = deltaX * deltaX + deltaY * deltaY;
         return distanceSquared < circleRadius * circleRadius;
     }

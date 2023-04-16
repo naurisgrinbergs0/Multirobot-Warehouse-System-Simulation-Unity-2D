@@ -74,7 +74,7 @@ namespace Assets.Scripts
             StartMemoryUsageCalculation();
             StartAverageSmoothnessCalculation();
 
-            // Run the pathplanning algo
+            // run the pathplanning algo
             algorithm.FindPaths(robots, StopCalculation);
         }
 
@@ -91,7 +91,7 @@ namespace Assets.Scripts
 
         private void StartMemoryUsageCalculation()
         {
-            // Collect garbage before measuring memory usage
+            // collect garbage before measuring memory usage
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();

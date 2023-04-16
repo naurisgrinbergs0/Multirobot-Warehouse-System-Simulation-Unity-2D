@@ -17,11 +17,11 @@ public class RobotGenerator : MonoBehaviour
 
         float spacing = (floorHeight - (numOfRobots * ROBOT_SIZE)) / (numOfRobots + 1);
 
+        // generate robots
         for (int i = 0; i < numOfRobots; i++)
         {
             Vector3 position = new Vector3(startX, startY + ((i + 1) * spacing) + (i * ROBOT_SIZE), 0);
             GameObject robot = GameObject.Instantiate(RobotPrefab, position, Quaternion.Euler(0, 0, 90));
-            //robot.GetComponent<SpriteRenderer>().color = Color.red;
             robot.GetComponent<SpriteRenderer>().size = new Vector2(ROBOT_SIZE, ROBOT_SIZE);
             robotPositions[i] = robot;
         }
