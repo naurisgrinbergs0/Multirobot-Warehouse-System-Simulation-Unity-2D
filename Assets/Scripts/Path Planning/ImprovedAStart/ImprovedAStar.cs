@@ -50,6 +50,7 @@ public class ImprovedAStar : PathfindingAlgorithm
 
         openList.Add(startNode);
 
+        // go through each open position
         while (openList.Count > 0)
         {
             Node current = openList[0];
@@ -76,7 +77,7 @@ public class ImprovedAStar : PathfindingAlgorithm
                 {
                     neighbor.g = tentativeGCost;
                     neighbor.h = GetDistance(neighbor, goalNode);
-                    neighbor.f = neighbor.g + (1 + r / R) * neighbor.h; // Use improved cost function
+                    neighbor.f = neighbor.g + (1 + r / R) * neighbor.h; // use improved cost function
                     neighbor.parent = current;
 
                     if (!openList.Contains(neighbor))
@@ -172,10 +173,10 @@ public class ImprovedAStar : PathfindingAlgorithm
 
                 Vector2 currentVelocity = new Vector2();
 
-                // Set the look-ahead distance
+                // set the look-ahead distance
                 float lookAheadDistance = 1f;
 
-                // Loop through each node in the path
+                // loop through each node in the path
                 for (int i = 0; i < path.Count; i++)
                 {
                     int lookAheadIndex = i;
@@ -191,12 +192,12 @@ public class ImprovedAStar : PathfindingAlgorithm
                             break;
                     }
 
-                    // Update target position to the new lookahead point
+                    // update target position to the new lookahead point
                     float[] pos = ((TileMap)map).TileToXY(path[lookAheadIndex].xTile, path[lookAheadIndex].yTile);
                     Vector2 targetPosition = new Vector2(pos[0], pos[1]);
 
                     int cntr = 0;
-                    // Move the robot towards the target position
+                    // move the robot towards the target position
                     while (Vector2.Distance(robot.position, targetPosition) > 0.02f)
                     {
                         Vector2 currentPosition = new Vector2(robot.position.x, robot.position.y);
@@ -231,7 +232,7 @@ public class ImprovedAStar : PathfindingAlgorithm
 
     private float GetAngle(RobotImprovedAStar robot)
     {
-        // Convert the angle to radians
+        // convert the angle to radians
         float angleRadians = robot.angle * Mathf.Deg2Rad;
 
         return angleRadians;

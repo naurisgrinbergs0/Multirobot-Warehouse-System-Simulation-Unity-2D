@@ -34,17 +34,17 @@ namespace Assets.Scripts.Map
                 LineRenderer lineRenderer = robot.robotPathGameObject.GetComponent<LineRenderer>();
                 //lineRenderer.positionCount = 0;
 
-                // Set the position count of the LineRenderer to the number of points in the path
+                // set the position count of the LineRenderer to the number of points in the path
                 lineRenderer.positionCount = path.Count;
 
-                // Set the positions of the LineRenderer to the points in the path
+                // set the positions of the LineRenderer to the points in the path
                 for (int i = 0; i < path.Count; i++)
                 {
                     Vector2 point = new Vector2(path[i].x, path[i].y);
                     lineRenderer.SetPosition(i, point);
                 }
 
-                // Customize the look of the LineRenderer
+                // change style of lines
                 lineRenderer.startWidth = 0.1f;
                 lineRenderer.endWidth = 0.1f;
                 lineRenderer.material.color = robot.color;
@@ -54,10 +54,12 @@ namespace Assets.Scripts.Map
         {
             if (drawGraphics)
             {
+                // move robot
                 robot.robotTransform.position = robot.position;
                 Color c = new Color(robot.color.r, robot.color.g, robot.color.b, 0.6f);
                 robot.robotTransform.gameObject.GetComponent<SpriteRenderer>().color = c;
 
+                // render cargo if needed
                 if (isCargoTrip)
                 {
                     if (robot.robotCargoGameObject == null)
@@ -75,6 +77,7 @@ namespace Assets.Scripts.Map
 
         public void DrawDelay(int? delayMilliseconds = null)
         {
+            // wait a bit
             if(drawGraphics)
                 Thread.Sleep(delayMilliseconds == null ? this.delayMilliseconds : (int)delayMilliseconds);
         }

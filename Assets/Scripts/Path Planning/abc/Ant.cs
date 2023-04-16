@@ -4,16 +4,16 @@
 
 //public class Ant
 //{
-//    // Fields
+//    // fields
 //    private int currentTile;
 //    private int endTile;
 //    private List<int> path;
 //    private HashSet<int> visited;
 
-//    // Constructor
+//    // constructor
 //    public Ant()
 //    {
-        
+
 //    }
 
 //    public void SetStartTile(int startTile)
@@ -27,7 +27,7 @@
 //        this.endTile = endTile;
 //    }
 
-//    // Methods
+//    // methods
 //    public int CurrentTile()
 //    {
 //        return currentTile;
@@ -52,12 +52,12 @@
 
 //    public int NextTile(TileMap map, float[,] pheromones)
 //    {
-//        // Get the valid neighbor tiles
+//        // get the valid neighbor tiles
 //        List<int> neighbors = ImprovedACO.GetNeighbors(currentTile, map);
 //        List<int> unvisitedNeighbours = new List<int>(neighbors);
 //        unvisitedNeighbours.RemoveAll(x => visited.Contains(x));
 
-//        // Calculate the probability of choosing each neighbor tile
+//        // calculate the probability of choosing each neighbor tile
 //        List<float> probabilities = new List<float>();
 //        float totalPheromones = 0;
 //        foreach (int neighbor in unvisitedNeighbours)
@@ -70,7 +70,7 @@
 //            totalPheromones += probability;
 //        }
 
-//        // Choose a neighbor tile based on the probabilities
+//        // choose a neighbor tile based on the probabilities
 //        float randomValue = UnityEngine.Random.Range(0f, totalPheromones);
 //        for (int i = 0; i < unvisitedNeighbours.Count; i++)
 //        {
@@ -81,7 +81,7 @@
 //            }
 //        }
 
-//        // If no neighbor was chosen, choose a random one
+//        // if no neighbor was chosen, choose a random one
 //        return neighbors[UnityEngine.Random.Range(0, neighbors.Count)];
 //    }
 

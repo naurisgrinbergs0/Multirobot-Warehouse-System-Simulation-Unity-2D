@@ -25,36 +25,32 @@ namespace Assets.Scripts.Map
 
         private int[,] GenerateMap()
         {
-            // Get the number of tiles in each direction for both floors
+            // get the number of tiles in each direction for both floors
             int widthTiles = Mathf.RoundToInt(floor.GetComponent<SpriteRenderer>().bounds.size.x / tileSize);
             int heightTiles = Mathf.RoundToInt(floor.GetComponent<SpriteRenderer>().bounds.size.y / tileSize);
 
-            // Initialize the map with all free tiles
+            // initialize the map with all free tiles
             int[,] map = new int[widthTiles, heightTiles];
             for (int x = 0; x < map.GetLength(0); x++)
-            {
                 for (int y = 0; y < map.GetLength(1); y++)
-                {
                     map[x, y] = 0; // 0 represents a free tile
-                }
-            }
 
-            // Define the margin width
+            // define the margin width
             float margin = tileSize * marginAroundObstacles;
 
-            // Iterate over all the tiles and mark obstructed tiles
+            // iterate over all the tiles and mark obstructed tiles
             for (int x = 0; x < map.GetLength(0); x++)
             {
                 for (int y = 0; y < map.GetLength(1); y++)
                 {
                     float[] tileCenter = TileToXY(x, y);
 
-                    // Check if the tile intersects with any shelf with a margin around it
+                    // check if the tile intersects with any shelf with a margin around it
                     bool intersectsObstacle = false;
                     foreach (Transform shelf in shelves)
                     {
                         Bounds shelfBounds = shelf.GetComponent<SpriteRenderer>().bounds;
-                        shelfBounds.Expand(margin); // Expand the bounds by the margin width
+                        shelfBounds.Expand(margin); // expand the bounds by the margin width
                         if (shelfBounds.Intersects(new Bounds(new Vector3(tileCenter[0], tileCenter[1]), new Vector3(tileSize, tileSize))))
                         {
                             intersectsObstacle = true;
@@ -62,11 +58,11 @@ namespace Assets.Scripts.Map
                         }
                     }
 
-                    // Check if the tile intersects with any wall with a margin around it
+                    // check if the tile intersects with any wall with a margin around it
                     foreach (Transform wall in walls)
                     {
                         Bounds wallBounds = wall.GetComponent<SpriteRenderer>().bounds;
-                        wallBounds.Expand(margin); // Expand the bounds by the margin width
+                        wallBounds.Expand(margin); // expand the bounds by the margin width
                         if (wallBounds.Intersects(new Bounds(new Vector3(tileCenter[0], tileCenter[1]), new Vector3(tileSize, tileSize))))
                         {
                             intersectsObstacle = true;
@@ -74,7 +70,7 @@ namespace Assets.Scripts.Map
                         }
                     }
 
-                    // Set the tile as obstructed if it intersects with a shelf
+                    // set the tile as obstructed if it intersects with a shelf
                     map[x, y] = intersectsObstacle ? 1 : 0;
                 }
             }
@@ -87,12 +83,14 @@ namespace Assets.Scripts.Map
 
         public int[] XYToTile(float x, float y)
         {
+            // convert xy position to tile position
             Vector3 floorLowerLeftCorner = floor.transform.position - floor.GetComponent<Renderer>().bounds.extents;
             return new int[] { (int)((x - floorLowerLeftCorner.x) / tileSize), (int)((y - floorLowerLeftCorner.y) / tileSize) };
         }
 
         public float[] TileToXY(int tileX, int tileY)
         {
+            // convert tile position to xy position
             Vector3 floorLowerLeftCorner = floor.transform.position - floor.GetComponent<Renderer>().bounds.extents;
             return new float[] { floorLowerLeftCorner.x + tileX * tileSize + tileSize / 2
                 , floorLowerLeftCorner.y + tileY * tileSize + tileSize / 2};
@@ -155,10 +153,10 @@ namespace Assets.Scripts.Map
 
         public GameObject DrawTile(int tileX, int tileY, GameObject tilePrefab/* = null*/, float sizeX = 0, float sizeY = 0)
         {
-            // Calculate the position of the tile
+            // calculate the position of the tile
             float[] pos = TileToXY(tileX, tileY);
 
-            // Create the tile game object
+            // create the tile game object
             GameObject tileObj = GameObject.Instantiate(/*tilePrefab == null ? this.tilePrefab :*/ tilePrefab
                 , new Vector3(pos[0], pos[1], 0f), Quaternion.identity);
             //tileObj.transform.localScale = new Vector3(tileSize, tileSize, 1f);

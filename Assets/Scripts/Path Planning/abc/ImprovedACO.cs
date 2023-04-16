@@ -26,14 +26,14 @@
 //        }
 //    }
 
-//    // Define the number of ants and iterations for the algorithm
+//    // define the number of ants and iterations for the algorithm
 //    private const int NumAnts = 10;
 //    private const int MaxIterations = 100;
 
-//    // Define the pheromone matrix
+//    // define the pheromone matrix
 //    private float[,] pheromones;
 
-//    // Define the map and robot list
+//    // define the map and robot list
 //    public TileMap map;
 //    private List<Robot> robots;
 
@@ -41,7 +41,7 @@
 //    {
 //        map = new TileMap(floor, shelves, walls, tileSize, tilePrefab, tileGoalPrefab);
 
-//        // Initialize the pheromone matrix
+//        // initialize the pheromone matrix
 //        int numTiles = map.tiles.GetLength(0) * map.tiles.GetLength(1);
 //        pheromones = new float[numTiles, numTiles];
 //        for (int i = 0; i < numTiles; i++)
@@ -80,20 +80,20 @@
 
 //    //public Dictionary<int[], List<Vector2>> TrainMatrix(List<Robot> robots)
 //    //{
-//    //    // Initialize the ants and best paths
+//    //    // initialize the ants and best paths
 //    //    List<Ant> ants = new List<Ant>();
 //    //    Dictionary<int[], List<int>> bestPaths = new Dictionary<int[], List<int>>();
 //    //    float[] bestPathLengths = new float[robots.Count];
 
-//    //    // Perform the ACO algorithm
+//    //    // perform the ACO algorithm
 //    //    for (int iteration = 0; iteration < MaxIterations; iteration++)
 //    //    {
-//    //        // Create the ants
+//    //        // create the ants
 //    //        ants.Clear();
 //    //        for (int i = 0; i < NumAnts; i++)
 //    //            ants.Add(new Ant());
 
-//    //        // Move the ants
+//    //        // move the ants
 //    //        Parallel.ForEach(ants, ant =>
 //    //        {
 //    //            int[] startTile = startTiles[ant.Id % startTiles.Count];
@@ -108,10 +108,10 @@
 
 //    //                while (!ant.AtEnd())
 //    //                {
-//    //                    // Get the next tile to move to
+//    //                    // get the next tile to move to
 //    //                    int nextTile = ant.NextTile(map, pheromones);
 
-//    //                    // Update the pheromone matrix
+//    //                    // update the pheromone matrix
 //    //                    float deltaPheromone = 1.0f / ant.PathLength(map);
 //    //                    lock (pheromones) // Ensure thread safety when updating pheromones
 //    //                    {
@@ -119,11 +119,11 @@
 //    //                        pheromones[nextTile, ant.CurrentTile()] += deltaPheromone;
 //    //                    }
 
-//    //                    // Move to the next tile
+//    //                    // move to the next tile
 //    //                    ant.MoveToTile(nextTile);
 //    //                }
 
-//    //                // Check if this ant found a better path
+//    //                // check if this ant found a better path
 //    //                float pathLength = ant.PathLength(map);
 //    //                if (pathLength < shortestPathLength)
 //    //                {
@@ -131,13 +131,13 @@
 //    //                    shortestPathLength = pathLength;
 //    //                }
 
-//    //                // Reset the ant for the next iteration
+//    //                // reset the ant for the next iteration
 //    //                ant.Reset();
 //    //            }
 
-//    //            // Update the best paths and pheromone matrix based on the shortest path for this ant
+//    //            // update the best paths and pheromone matrix based on the shortest path for this ant
 //    //            int index = ant.Id % endTiles.Count;
-//    //            lock (bestPaths) // Ensure thread safety when updating bestPaths
+//    //            lock (bestPaths) // ensure thread safety when updating bestPaths
 //    //            {
 //    //                if (shortestPathLength < bestPathLengths[index])
 //    //                {
@@ -156,13 +156,13 @@
 //    //            }
 //    //        });
 
-//    //        // Evaporate the pheromone trails
+//    //        // evaporate the pheromone trails
 //    //        for (int i = 0; i < map.tiles.GetLength(0); i++)
 //    //            for (int j = 0; j < map.tiles.GetLength(1); j++)
 //    //                pheromones[i, j] *= (1 - PHEROMONE_EVAPORATION_RATE);
 //    //    }
 
-//    //    // Convert the best path indices to a list of vectors
+//    //    // convert the best path indices to a list of vectors
 //    //    List<Vector2> path = new List<Vector2>();
 //    //    foreach (int tileIndex in shortestPath)
 //    //    {
@@ -185,20 +185,20 @@
 //        int xIndex = tile[0];
 //        int yIndex = tile[1];
 
-//        // Check if the indices are within the bounds of the tiles array
+//        // check if the indices are within the bounds of the tiles array
 //        if (xIndex < 0 || xIndex >= map.tiles.GetLength(0) || yIndex < 0 || yIndex >= map.tiles.GetLength(1))
 //        {
-//            // If the indices are out of bounds, return -1 to indicate an invalid index
+//            // if the indices are out of bounds, return -1 to indicate an invalid index
 //            return -1;
 //        }
 
-//        // Return the index of the cell
+//        // return the index of the cell
 //        return xIndex * map.tiles.GetLength(0) + yIndex;
 //    }
 
 
 
-//    // Helper function to get neighboring tiles
+//    // helper function to get neighboring tiles
 //    public static List<int> GetNeighbors(int tile, TileMap map)
 //    {
 //        List<int> neighbors = new List<int>();
@@ -207,19 +207,19 @@
 //        int row = tile % map.tiles.GetLength(1);
 
 
-//        // Check left neighbour
+//        // check left neighbour
 //        if (col - 1 > -1 && map.tiles[col - 1, row] == 0)
 //            neighbors.Add(row + (col - 1) * map.tiles.GetLength(0));
 
-//        // Check right neighbour
+//        // check right neighbour
 //        if (col + 1 < map.tiles.GetLength(0) && map.tiles[col + 1, row] == 0)
 //            neighbors.Add(row + (col + 1) * map.tiles.GetLength(0));
 
-//        // Check top neighbour
+//        // check top neighbour
 //        if (row + 1 < map.tiles.GetLength(1) && map.tiles[col, row + 1] == 0)
 //            neighbors.Add((row + 1) + col * map.tiles.GetLength(0));
 
-//        // Check bottom neighbour
+//        // check bottom neighbour
 //        if (row - 1 > -1 && map.tiles[col, row - 1] == 0)
 //            neighbors.Add((row - 1) + col * map.tiles.GetLength(0));
 
