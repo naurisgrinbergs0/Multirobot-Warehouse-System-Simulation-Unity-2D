@@ -522,9 +522,29 @@ PrefabInstance:
       propertyPath: m_TagString
       value: ZoneLoad
       objectReference: {fileID: 0}
+    - target: {fileID: 2800245963145514766, guid: 0ae7b1856e7b42a44a7ff61809a86bd1, type: 3}
+      propertyPath: m_Size.x
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 2800245963145514766, guid: 0ae7b1856e7b42a44a7ff61809a86bd1, type: 3}
+      propertyPath: m_Size.y
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 2800245963145514766, guid: 0ae7b1856e7b42a44a7ff61809a86bd1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 8478e34762491d046b032d9c019793c6, type: 3}
     - target: {fileID: 2800245963145514767, guid: 0ae7b1856e7b42a44a7ff61809a86bd1, type: 3}
       propertyPath: m_RootOrder
       value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2800245963145514767, guid: 0ae7b1856e7b42a44a7ff61809a86bd1, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.28
+      objectReference: {fileID: 0}
+    - target: {fileID: 2800245963145514767, guid: 0ae7b1856e7b42a44a7ff61809a86bd1, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.28
       objectReference: {fileID: 0}
     - target: {fileID: 2800245963145514767, guid: 0ae7b1856e7b42a44a7ff61809a86bd1, type: 3}
       propertyPath: m_LocalPosition.x
@@ -593,9 +613,21 @@ PrefabInstance:
       propertyPath: m_TagString
       value: ZoneUnload
       objectReference: {fileID: 0}
+    - target: {fileID: 2800245963145514766, guid: 0ae7b1856e7b42a44a7ff61809a86bd1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: ef0e616db84497d44b8b19fd1bbfd38b, type: 3}
     - target: {fileID: 2800245963145514767, guid: 0ae7b1856e7b42a44a7ff61809a86bd1, type: 3}
       propertyPath: m_RootOrder
       value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 2800245963145514767, guid: 0ae7b1856e7b42a44a7ff61809a86bd1, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.28
+      objectReference: {fileID: 0}
+    - target: {fileID: 2800245963145514767, guid: 0ae7b1856e7b42a44a7ff61809a86bd1, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.28
       objectReference: {fileID: 0}
     - target: {fileID: 2800245963145514767, guid: 0ae7b1856e7b42a44a7ff61809a86bd1, type: 3}
       propertyPath: m_LocalPosition.x
@@ -666,7 +698,7 @@ PrefabInstance:
       objectReference: {fileID: 3228722513869701253, guid: 4daba47b84c1c45408bbb32f36fbe648, type: 3}
     - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: numberOfTrips
-      value: 4
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: goalTilePrefab
@@ -678,12 +710,16 @@ PrefabInstance:
       objectReference: {fileID: 1376811392}
     - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: simulationMode
-      value: 0
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: robotPathPrefab
       value: 
       objectReference: {fileID: 8526742145013004586, guid: 563ec4e22192c6543b92d05b11ed0bc9, type: 3}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: shelvesVertical
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: robotCargoPrefab
       value: 
@@ -692,6 +728,10 @@ PrefabInstance:
       propertyPath: robotFloorPrefab
       value: 
       objectReference: {fileID: 711411417}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: runImprovedAStar
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: shelfFloorPrefab
       value: 
@@ -725,12 +765,28 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: numOfRobots.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: pathFindingAlgorithmEnum
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: delayBetweenStepsInMillis
-      value: 50
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: numOfRobots.Array.data[3]
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: numOfRobots.Array.data[4]
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 7757618888419443204, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
+      propertyPath: numOfRobots.Array.data[5]
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 7757618888419443205, guid: ac960e468ebe2bc44aa58c4195262550, type: 3}
       propertyPath: m_RootOrder

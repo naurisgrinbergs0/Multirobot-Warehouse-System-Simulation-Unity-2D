@@ -17,10 +17,16 @@ public class Entry : MonoBehaviour
         Graphics, Metrics, MetricsAndGraphics
     }
 
-    public PathFindingAlgorithmEnum pathFindingAlgorithmEnum = PathFindingAlgorithmEnum.RERAPF;
+    public bool runRERAPF = true;
+    public bool runImprovedAStar = true;
+
     public SimulationMode simulationMode = SimulationMode.Graphics;
     public int numberOfTrips = 1;
-    public int delayBetweenStepsInMillis = 50;
+    public int delayBetweenStepsInMillis = 40;
+    public int[] numOfRobots = new[] { 2, 5, 10 };
+    public int shelvesHorizontal = 5;
+    public int shelvesVertical = 5;
+    public float tileSize = 0.5f;
 
     public Transform floorGameTransform;
     public Transform shelfFloorTransform;
@@ -38,21 +44,54 @@ public class Entry : MonoBehaviour
 
     private Metrics metrics;
     private CSVExporter csvExporter;
-    List<RobotBase> robots;
+    private List<RobotBase> robots = new List<RobotBase>();
+    private MapBase map;
+
+    private Transform[] wallGameObjects = new Transform[] { };
+    private Transform[] shelfGameObjects = new Transform[] { };
+    private Transform[] robotGameObjects = new Transform[] { };
+
+    private List<PathFindingAlgorithmEnum> algorithmEnums = new List<PathFindingAlgorithmEnum>();
+    private int currentAlgorithmEnumIndex = 0;
+    private int currentNumOfRobotsIndex = 0;
+    private bool algorithmRunning = false;
+    private bool simulationFinished = false;
 
     private void Start()
     {
-        Transform[] wallGameObjects = floorGameTransform.GetComponent<WallGenerator>().GenerateWalls().Select(go => go.transform).ToArray();
-        Transform[] shelfGameObjects = shelfFloorTransform.GetComponent<ShelfGenerator>().GenerateShelves().Select(go => go.transform).ToArray();
-        Transform[] robotGameObjects = robotFloorTransform.GetComponent<RobotGenerator>().GenerateRobots().Select(go => go.transform).ToArray();
+        wallGameObjects = floorGameTransform.GetComponent<WallGenerator>().GenerateWalls().Select(go => go.transform).ToArray();
 
-        // determine the size of the tiles based on the smaller of the robot and shelf sizes
-        float tileSize = Mathf.Min(robotGameObjects[0].GetComponent<SpriteRenderer>().bounds.size.x / 2f
-            , robotGameObjects[0].GetComponent<SpriteRenderer>().bounds.size.y / 2f);
+        if(runRERAPF)
+            algorithmEnums.Add(PathFindingAlgorithmEnum.RERAPF);
+        if (runImprovedAStar)
+            algorithmEnums.Add(PathFindingAlgorithmEnum.ImporvedAStar);
+
+        CreateMap(shelvesHorizontal, shelvesVertical);
+        CreateRobots();
+    }
+
+    private void Update()
+    {
+        if (!simulationFinished && !algorithmRunning)
+        {
+            algorithmRunning = true;
+            ExecuteAlgorithm();
+        }
+    }
+
+
+    private void CreateMap(int numOfShelvesHorizontal, int numOfShelvesVertical)
+    {
+        // destroy old shelf objects
+        foreach (Transform sgo in shelfGameObjects)
+            GameObject.Destroy(sgo.gameObject);
+
+        shelfGameObjects = shelfFloorTransform.GetComponent<ShelfGenerator>()
+            .GenerateShelves(numOfShelvesHorizontal, numOfShelvesVertical).Select(go => go.transform).ToArray();
 
         // make a map
-        MapBase map = null;
-        switch (pathFindingAlgorithmEnum)
+        map = null;
+        switch (algorithmEnums[currentAlgorithmEnumIndex])
         {
             case PathFindingAlgorithmEnum.RERAPF:
             case PathFindingAlgorithmEnum.ImporvedAStar:
@@ -67,7 +106,21 @@ public class Entry : MonoBehaviour
         map.robotCargoPrefab = robotCargoPrefab;
         map.delayMilliseconds = delayBetweenStepsInMillis;
         map.drawGraphics = simulationMode == SimulationMode.Graphics || simulationMode == SimulationMode.MetricsAndGraphics;
+    }
 
+    private void CreateRobots()
+    {
+        // destroy old robot game objects & cargo & paths
+        foreach (RobotBase r in robots)
+        {
+            GameObject.Destroy(r.robotTransform.gameObject);
+            GameObject.Destroy(r.robotCargoGameObject);
+            GameObject.Destroy(r.robotPathGameObject);
+        }
+
+        // create new game objects
+        robotGameObjects = robotFloorTransform.GetComponent<RobotGenerator>()
+            .GenerateRobots(numOfRobots[currentNumOfRobotsIndex]).Select(go => go.transform).ToArray();
 
         // make trips for robots
         int seed = System.Environment.TickCount;
@@ -81,7 +134,7 @@ public class Entry : MonoBehaviour
             Color c = Random.ColorHSV();
             c.a = 0.3f;
 
-            switch (pathFindingAlgorithmEnum)
+            switch (algorithmEnums[currentAlgorithmEnumIndex])
             {
                 case PathFindingAlgorithmEnum.RERAPF:
                     {
@@ -110,10 +163,13 @@ public class Entry : MonoBehaviour
             }
             robots.Add(robot);
         }
+    }
 
+    private void ExecuteAlgorithm()
+    {
         // set up algorithm
         PathfindingAlgorithm pathFindingAlgorithm = null;
-        switch (pathFindingAlgorithmEnum)
+        switch (algorithmEnums[currentAlgorithmEnumIndex])
         {
             default:
             case PathFindingAlgorithmEnum.RERAPF:
@@ -131,18 +187,16 @@ public class Entry : MonoBehaviour
 
         // set up csv exporter
         csvExporter = new CSVExporter("C://temp/Metrics.csv");
-        csvExporter.CreateTableIfNotExists(new[] { "Algorithm", "NumOfRobots", "Efficiency", "UsedMemory", "Optimality", "Smoothness" });
+        csvExporter.CreateTableIfNotExists(new[] { "Algorithm", "NumOfRobots", "ExecutionTime"
+            , "UsedMemory"/*, "Optimality"*/, "Smoothness" });
 
         // set up metrics or simulate right away
         if (simulationMode == SimulationMode.Metrics || simulationMode == SimulationMode.MetricsAndGraphics)
         {
             // set up metrics
             metrics = new Metrics(pathFindingAlgorithm);
-            metrics.measurement = Metrics.Measurement.MemoryUsage;
-            metrics.callback = SaveMemoryUsage;
-            metrics.map = map;
             metrics.robots = robots;
-            pathFindingAlgorithm.metrics = metrics;
+            metrics.StartCalculation(SaveMetrics);
         }
         else if (simulationMode == SimulationMode.Graphics)
         {
@@ -151,61 +205,42 @@ public class Entry : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        // calculate every measurement one by one
-        if (metrics != null && metrics.measurement != Metrics.Measurement.None && !metrics.calculationInProgress)
-        {
-            ResetState();
-            metrics.StartCalculation();
-        }
-    }
 
 
-    private void ResetState()
-    {
-        // reset trips
-        for(int i = 0; i < metrics.robots.Count; i++)
-        {
-            metrics.robots[i].tripIndex = 0;
-            metrics.robots[i].robotTransform.position = (Vector3)metrics.robots[i].trips.First().from;
-        }
-    }
-
-
-    private void SaveMemoryUsage()
-    {
-        metrics.StopCalculation();
-        // store value
-        Debug.Log($"Mem: {metrics.GetMemoryUsage()}");
-        metrics.measurement = Metrics.Measurement.ExecutionTime;
-        metrics.callback = SaveExecutionTime;
-    }
-
-    private void SaveExecutionTime()
-    {
-        metrics.StopCalculation();
-        // store value
-        Debug.Log($"Eff: {metrics.GetExecutionTime()}");
-        metrics.measurement = Metrics.Measurement.AverageSmoothness;
-        metrics.callback = SaveAverageSmoothness;
-    }
-
-    private void SaveAverageSmoothness()
-    {
-        metrics.StopCalculation();
-        // store value
-        Debug.Log($"Smoo: {metrics.GetAverageSmoothness()}");
-        metrics.measurement = Metrics.Measurement.None;
-        SaveMetricsToFile();
-    }
-
-    private void SaveMetricsToFile()
+    private void SaveMetrics()
     {
         csvExporter.AddRecord(new string[] {
-            System.Enum.GetName(typeof(PathFindingAlgorithmEnum), pathFindingAlgorithmEnum), robots.Count.ToString()
+            System.Enum.GetName(typeof(PathFindingAlgorithmEnum), algorithmEnums[currentAlgorithmEnumIndex]), robots.Count.ToString()
             , metrics.GetExecutionTime().ToString(), metrics.GetMemoryUsage().ToString()
-            ,  metrics.GetAverageOptimality().ToString(), metrics.GetAverageSmoothness().ToString()
+            /*, metrics.GetAverageOptimality().ToString()*/, metrics.GetAverageSmoothness().ToString()
         });
+        PrepareForNextExecution();
+    }
+
+    private void PrepareForNextExecution()
+    {
+        // progress to next execution starting state
+        // first go through each algorithm with the same number of robots
+        // then change num of robots
+        if (currentAlgorithmEnumIndex == algorithmEnums.Count - 1)
+        {
+            if (currentNumOfRobotsIndex == numOfRobots.Length - 1)
+            {
+                simulationFinished = true;
+                return;
+            }
+            currentNumOfRobotsIndex++;
+            currentAlgorithmEnumIndex = 0;
+            CreateRobots();
+            algorithmRunning = false;
+            return;
+        }
+        currentAlgorithmEnumIndex++;
+
+        // reset robot states
+        foreach (RobotBase r in robots)
+            r.ResetState();
+
+        algorithmRunning = false;
     }
 }

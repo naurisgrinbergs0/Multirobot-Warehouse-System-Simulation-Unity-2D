@@ -22,12 +22,11 @@ namespace Assets.Scripts
             this.algorithm = algorithm;
         }
 
-        public Measurement measurement;
-        public Action callback;
+        private Action callback;
 
         private PathfindingAlgorithm algorithm;
         public List<RobotBase> robots;
-        public MapBase map;
+        //public MapBase map;
 
 
         #region Measurements
@@ -52,52 +51,42 @@ namespace Assets.Scripts
             return averageSmoothness;
         }
 
+        /*
         private AStar astar;
         private float? averageOptimality = null;
         public float? GetAverageOptimality()
         {
             return averageOptimality;
         }
+        */
 
         public bool calculationInProgress = false;
 
         #endregion Measurements
 
 
-        public void StartCalculation()
+        public void StartCalculation(Action callback)
         {
+            this.callback = callback;
             calculationInProgress = true;
-            switch (measurement)
-            {
-                default:
-                case Measurement.ExecutionTime:
-                    StartExecutionTimeCalculation();
-                    break;
-                case Measurement.MemoryUsage:
-                    StartMemoryUsageCalculation();
-                    break;
-                case Measurement.AverageSmoothness:
-                    StartAverageSmoothnessCalculation();
-                    break;
-            }
+
+            StartExecutionTimeCalculation();
+            StartMemoryUsageCalculation();
+            StartAverageSmoothnessCalculation();
+
+            // Run the pathplanning algo
+            algorithm.FindPaths(robots, StopCalculation);
         }
 
         public void StopCalculation()
         {
-            switch (measurement)
-            {
-                default:
-                case Measurement.ExecutionTime:
-                    StopExecutionTimeCalculation();
-                    break;
-                case Measurement.MemoryUsage:
-                    StopMemoryUsageCalculation();
-                    break;
-                case Measurement.AverageSmoothness:
-                    StopAverageSmoothnessCalculation();
-                    break;
-            }
+            StopExecutionTimeCalculation();
+            StopMemoryUsageCalculation();
+            StopAverageSmoothnessCalculation();
+
             calculationInProgress = false;
+            if(callback != null)
+                callback.Invoke();
         }
 
         private void StartMemoryUsageCalculation()
@@ -108,9 +97,6 @@ namespace Assets.Scripts
             GC.Collect();
 
             memoryStart = Profiler.GetTotalAllocatedMemoryLong();
-
-            // Run the pathplanning algo
-            algorithm.FindPaths(robots);
         }
         public void StopMemoryUsageCalculation()
         {
@@ -121,9 +107,6 @@ namespace Assets.Scripts
         {
             stopwatch = new Stopwatch();
             stopwatch.Start();
-
-            // Run the path planning algorithm
-            algorithm.FindPaths(robots);
         }
         public void StopExecutionTimeCalculation()
         {
@@ -131,6 +114,42 @@ namespace Assets.Scripts
             executionTime = stopwatch.Elapsed.TotalSeconds;
         }
 
+        private void StartAverageSmoothnessCalculation()
+        {
+            
+        }
+        private void StopAverageSmoothnessCalculation()
+        {
+            float maxSmoothness = 0f;
+            float smoothnessSum = 0f;
+
+            foreach (Tuple<RobotBase, List<Vector2>> path in algorithm.paths)
+            {
+                float smoothness = 0f;
+
+                for (int i = 0; i < path.Item2.Count - 2; i++)
+                {
+                    Vector2 p0 = path.Item2[i];
+                    Vector2 p1 = path.Item2[i + 1];
+                    Vector2 p2 = path.Item2[i + 2];
+
+                    float diff = (p1 - p0).sqrMagnitude + (p2 - p1).sqrMagnitude;
+                    float length = (p2 - p0).sqrMagnitude;
+
+                    if (length > 0f)
+                        smoothness += diff / length;
+                }
+                maxSmoothness = Mathf.Max(maxSmoothness, smoothness);
+                smoothnessSum += smoothness;
+            }
+
+            float smoothnessScale = 1f / maxSmoothness;
+            this.averageSmoothness = smoothnessSum / algorithm.paths.Count * smoothnessScale;
+        }
+
+
+
+        /*
         private void StartAverageOptimalityCalculation()
         {
             // run shortes path calculation algorithm
@@ -159,35 +178,7 @@ namespace Assets.Scripts
 
             this.averageOptimality = averageOptimality / robots.Count;
         }
+        */
 
-        private void StartAverageSmoothnessCalculation()
-        {
-            algorithm.FindPaths(robots);
-        }
-        private void StopAverageSmoothnessCalculation()
-        {
-            float smoothnessSum = 0f;
-
-            foreach (Tuple<RobotBase, List<Vector2>> path in algorithm.paths)
-            {
-                float smoothness = 0f;
-
-                for (int i = 0; i < path.Item2.Count - 2; i++)
-                {
-                    Vector2 p0 = path.Item2[i];
-                    Vector2 p1 = path.Item2[i + 1];
-                    Vector2 p2 = path.Item2[i + 2];
-
-                    float diff = (p1 - p0).sqrMagnitude + (p2 - p1).sqrMagnitude;
-                    float length = (p2 - p0).sqrMagnitude;
-
-                    if (length > 0f)
-                        smoothness += diff / length;
-                }
-                smoothnessSum += smoothness;
-            }
-
-            this.averageSmoothness = smoothnessSum / algorithm.paths.Count;
-        }
     }
 }

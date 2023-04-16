@@ -23,5 +23,11 @@ namespace Assets.Scripts.Robot
             this.robotTransform = robotTransform;
             this.color = color;
         }
+
+        public void ResetState()
+        {
+            tripIndex = 0;
+            robotTransform.position = (Vector3)trips.First().from;
+        }
     }
 }
